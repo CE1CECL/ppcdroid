@@ -725,28 +725,34 @@ bool InputDispatcher::dispatchMotionLocked(
         logOutboundMotionDetailsLocked("dispatchMotion - ", entry);
     }
 
+    bool isPointerEvent = entry->source & AINPUT_SOURCE_CLASS_POINTER;
+    bool isMouseEvent = entry->source & (AINPUT_SOURCE_MOUSE & ~AINPUT_SOURCE_CLASS_POINTER);
+    bool isTouchEvent = entry->source & (AINPUT_SOURCE_TOUCHSCREEN & ~AINPUT_SOURCE_CLASS_POINTER);
+    bool isDownEvent = (entry->action & AMOTION_EVENT_ACTION_MASK) == AMOTION_EVENT_ACTION_DOWN;
+
     // Clean up if dropping the event.
-    if (*dropReason != DROP_REASON_NOT_DROPPED) {
+    // And don't drop mouse events even if device is locked.
+    if (*dropReason != DROP_REASON_NOT_DROPPED && !isMouseEvent) {
         resetTargetsLocked();
         setInjectionResultLocked(entry, *dropReason == DROP_REASON_POLICY
                 ? INPUT_EVENT_INJECTION_SUCCEEDED : INPUT_EVENT_INJECTION_FAILED);
         return true;
     }
 
-    bool isPointerEvent = entry->source & AINPUT_SOURCE_CLASS_POINTER;
-
     // Identify targets.
     if (! mCurrentInputTargetsValid) {
         int32_t injectionResult;
-        if (isPointerEvent) {
-            // Pointer event.  (eg. touchscreen)
-            injectionResult = findTouchedWindowTargetsLocked(currentTime,
-                    entry, nextWakeupTime);
-        } else {
-            // Non touch event.  (eg. trackball)
-            injectionResult = findFocusedWindowTargetsLocked(currentTime,
-                    entry, nextWakeupTime);
+        if ( isPointerEvent && (isTouchEvent || (isMouseEvent && (isDownEvent || mTouchState.down))))
+        {
+            // Touch-like event.  (eg. touchscreen or mouse drag-n-drop )
+            injectionResult = findTouchedWindowTargetsLocked(currentTime, entry, nextWakeupTime);
         }
+        else
+        {
+            // Non touch event.  (eg. trackball or mouse simple move)
+            injectionResult = findFocusedWindowTargetsLocked(currentTime, entry, nextWakeupTime);
+        }
+
         if (injectionResult == INPUT_EVENT_INJECTION_PENDING) {
             return false;
         }

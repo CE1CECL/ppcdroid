@@ -100,7 +100,7 @@ fi
 # Create temp directory where everything will be copied first
 #
 PKGNAME=android-ndk-toolchain-$RELEASE
-TMPDIR=/tmp/$PKGNAME
+TMPDIR=/home/lumag/Projects/clands/tmp-ndk-gbread/$PKGNAME
 log "Creating temporary directory $TMPDIR"
 rm -rf $TMPDIR && mkdir $TMPDIR
 fail_panic "Could not create temporary directory: $TMPDIR"
@@ -109,23 +109,23 @@ fail_panic "Could not create temporary directory: $TMPDIR"
 if [ -n "$OPTION_GIT_BASE" ] ; then
     GITPREFIX="$OPTION_GIT_BASE"
 else
-    GITPROTO=git
+    GITPROTO=https
     if [ "$OPTION_GIT_HTTP" = "yes" ] ; then
         GITPROTO=http
     fi
-    GITPREFIX=${GITPROTO}://android.git.kernel.org/toolchain
+    GITPREFIX=${GITPROTO}://android.googlesource.com/toolchain
 fi
-dump "Using git clone prefix: $GITPREFIX"
+dump "Using git clone -l -s prefix: $GITPREFIX"
 
 toolchain_clone ()
 {
     dump "downloading sources for toolchain/$1"
     if [ -d "$GITPREFIX/$1" ]; then
         log "cloning $GITPREFIX/$1"
-        run git clone $GITPREFIX/$1 $1
+        run git clone -l -s $GITPREFIX/$1 $1
     else
         log "cloning $GITPREFIX/$1.git"
-        run git clone $GITPREFIX/$1.git $1
+        run git clone -l -s $GITPREFIX/$1.git $1
     fi
     fail_panic "Could not clone $GITPREFIX/$1.git ?"
     log "checking out $BRANCH branch of $1.git"
@@ -134,17 +134,17 @@ toolchain_clone ()
         run git checkout -b $BRANCH origin/$BRANCH
         fail_panic "Could not checkout $1 ?"
         # If --git-date is used, or we have a default
-        if [ -n "$GIT_DATE" ] ; then
-            REVISION=`git rev-list -n 1 --until="$GIT_DATE" HEAD`
-            dump "Using sources for date '$GIT_DATE': toolchain/$1 revision $REVISION"
-            run git checkout $REVISION
-            fail_panic "Could not checkout $1 ?"
-        fi
+    fi
+    if [ -n "$GIT_DATE" ] ; then
+        REVISION=`git rev-list -n 1 --until="$GIT_DATE" HEAD`
+        dump "Using sources for date '$GIT_DATE': toolchain/$1 revision $REVISION"
+        run git checkout $REVISION
+        fail_panic "Could not checkout $1 ?"
     fi
     # get rid of .git directory, we won't need it.
     cd ..
-    log "getting rid of .git directory for $1."
-    run rm -rf $1/.git
+    #log "getting rid of .git directory for $1."
+    #run rm -rf $1/.git
 }
 
 cd $TMPDIR

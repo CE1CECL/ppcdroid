@@ -175,6 +175,7 @@ $BUILD_SRCDIR/configure --target=$ABI_CONFIGURE_TARGET \
                         --host=$ABI_CONFIGURE_HOST \
                         --build=$ABI_CONFIGURE_BUILD \
                         --disable-nls \
+			--enable-initfini-array \
                         --prefix=$TOOLCHAIN_PATH \
                         --with-sysroot=$TOOLCHAIN_SYSROOT \
                         --with-binutils-version=$BINUTILS_VERSION \

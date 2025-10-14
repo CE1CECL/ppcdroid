@@ -1519,11 +1519,19 @@ long addr;
 		(unsigned long)statbuf.f_bsize,
 		(unsigned long)statbuf.f_blocks,
 		(unsigned long)statbuf.f_bfree);
+#ifdef __powerpc__
+	tprintf("f_bavail=%lu, f_files=%lu, f_ffree=%lu, f_fsid={%d, %d}",
+		(unsigned long)statbuf.f_bavail,
+		(unsigned long)statbuf.f_files,
+		(unsigned long)statbuf.f_ffree,
+		statbuf.f_fsid.val[0], statbuf.f_fsid.val[1]);
+#else
 	tprintf("f_bavail=%lu, f_files=%lu, f_ffree=%lu, f_fsid={%d, %d}",
 		(unsigned long)statbuf.f_bavail,
 		(unsigned long)statbuf.f_files,
 		(unsigned long)statbuf.f_ffree,
 		statbuf.f_fsid.__val[0], statbuf.f_fsid.__val[1]);
+#endif /* !powerpc */
 #ifdef LINUX
 	tprintf(", f_namelen=%lu", (unsigned long)statbuf.f_namelen);
 #endif /* LINUX */
@@ -1580,11 +1588,19 @@ long addr;
 		(unsigned long long)statbuf.f_bsize,
 		(unsigned long long)statbuf.f_blocks,
 		(unsigned long long)statbuf.f_bfree);
+#ifdef __powerpc__
+	tprintf("f_bavail=%llu, f_files=%llu, f_ffree=%llu, f_fsid={%d, %d}",
+		(unsigned long long)statbuf.f_bavail,
+		(unsigned long long)statbuf.f_files,
+		(unsigned long long)statbuf.f_ffree,
+		statbuf.f_fsid.val[0], statbuf.f_fsid.val[1]);
+#else
 	tprintf("f_bavail=%llu, f_files=%llu, f_ffree=%llu, f_fsid={%d, %d}",
 		(unsigned long long)statbuf.f_bavail,
 		(unsigned long long)statbuf.f_files,
 		(unsigned long long)statbuf.f_ffree,
 		statbuf.f_fsid.__val[0], statbuf.f_fsid.__val[1]);
+#endif /* !powerpc */
 	tprintf(", f_namelen=%lu", (unsigned long)statbuf.f_namelen);
 #ifdef _STATFS_F_FRSIZE
 	tprintf(", f_frsize=%llu", (unsigned long long)statbuf.f_frsize);

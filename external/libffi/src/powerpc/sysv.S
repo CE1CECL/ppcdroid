@@ -28,7 +28,7 @@
 #define LIBFFI_ASM
 #include <fficonfig.h>
 #include <ffi.h>
-#include <powerpc/asm.h>
+#include "asm.h"
 
 #ifndef __powerpc64__
 	.globl ffi_prep_args_SYSV

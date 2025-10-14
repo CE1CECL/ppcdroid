@@ -588,8 +588,17 @@ parse_toolchain_name ()
         ABI_CONFIGURE_TARGET="i686-android-linux-gnu"
         PLATFORM=android-5
         ;;
+    powerpc-android-linux-*)
+        ARCH="powerpc"
+        ABI_INSTALL_NAME="ppc"
+        ABI_CONFIGURE_TARGET="powerpc-android-linux"
+
+	# HACK!
+        ABI_CONFIGURE_EXTRA_FLAGS="$ABI_CONFIGURE_EXTRA_FLAGS --enable-libstdc__-v3"
+        PLATFORM=android-9
+        ;;
     * )
-        echo "Invalid toolchain specified. Expected (arm-eabi-*|x86-*)"
+        echo "Invalid toolchain specified. Expected (arm-eabi-*|x86-*|powerpc-android-linux-*)"
         echo ""
         print_help
         exit 1
@@ -609,6 +618,10 @@ parse_toolchain_name ()
         ;;
     x86-*)
         GDBSERVER_HOST=i686-android-linux-gnu
+        GDBSERVER_CFLAGS=
+        ;;
+    powerpc-*)
+        GDBSERVER_HOST=powerpc-android-linux-gnu
         GDBSERVER_CFLAGS=
         ;;
     esac
@@ -676,7 +689,7 @@ API_LEVELS="3 4 5 8 9"
 STLPORT_SUBDIR=sources/cxx-stl/stlport
 
 # Default ABIs for the prebuilt STLport binaries
-STLPORT_ABIS="armeabi armeabi-v7a"
+STLPORT_ABIS="armeabi armeabi-v7a ppc"
 
 # Location of the GNU libstdc++ headers and libraries, relative to the NDK
 # root directory.

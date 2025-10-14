@@ -31,7 +31,9 @@
 
 #endif /* __GNUC_ */
 
+#undef _BYTE_ORDER
 #define	_BYTE_ORDER _LITTLE_ENDIAN
+#define ARCH_ENDIAN_INCLUDED
 #include <sys/endian.h>
 
 #define	__STRICT_ALIGNMENT

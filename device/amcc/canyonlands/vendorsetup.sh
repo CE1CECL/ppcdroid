@@ -1,0 +1,3 @@
+add_lunch_combo full_canyonlands-eng
+add_lunch_combo full_canyonlands-userdebug
+

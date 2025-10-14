@@ -968,7 +968,7 @@ endef
 
 define extract-and-include-host-whole-static-libs
 $(foreach lib,$(PRIVATE_ALL_WHOLE_STATIC_LIBRARIES), \
-	@echo "preparing StaticLib: $(PRIVATE_MODULE) [including $(lib)]"; \
+	echo "preparing StaticLib: $(PRIVATE_MODULE) [including $(lib)]"; \
 	ldir=$(PRIVATE_INTERMEDIATES_DIR)/WHOLE/$(basename $(notdir $(lib)))_objs;\
 	rm -rf $$ldir; \
 	mkdir -p $$ldir; \
@@ -986,9 +986,9 @@ endef
 define transform-host-o-to-static-lib
 @mkdir -p $(dir $@)
 @rm -f $@
-$(extract-and-include-host-whole-static-libs)
+@$(extract-and-include-host-whole-static-libs)
 @echo "host StaticLib: $(PRIVATE_MODULE) ($@)"
-echo $(filter %.o, $^) | \
+@echo $(filter %.o, $^) | \
 	xargs $(HOST_AR) $(HOST_GLOBAL_ARFLAGS) $(PRIVATE_ARFLAGS) $@
 endef
 
@@ -1702,9 +1702,10 @@ endef
 #
 # $(1): The file(s) to check (often $@)
 # $(2): The partition size.
+# $(3): the type of filesystem "yaffs" or "raw"
 define assert-max-image-size
 $(if $(2), \
-  $(call assert-max-file-size,$(1),$(call image-size-from-data-size,$(2))), \
+  $(call assert-max-file-size,$(1),$(call image-size-from-data-size,$(2)),$(3)), \
   true)
 endef
 

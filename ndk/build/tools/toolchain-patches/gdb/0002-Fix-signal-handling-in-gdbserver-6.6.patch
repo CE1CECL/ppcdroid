@@ -1,3 +1,10 @@
+From 3f6b5e299edf0e531579de6d06089727d483edbd Mon Sep 17 00:00:00 2001
+From: David 'Digit' Turner <digit@android.com>
+Date: Thu, 25 Nov 2010 18:37:38 +0100
+Subject: [PATCH] Fix signal handling in gdbserver 6.6
+
+---
+
 diff -burN gdb-org/gdb-6.6/gdb/gdbserver/linux-low.c gdb/gdb-6.6/gdb/gdbserver/linux-low.c
 --- gdb-org/gdb-6.6/gdb/gdbserver/linux-low.c	2010-11-26 09:33:53.446951831 +0100
 +++ gdb/gdb-6.6/gdb/gdbserver/linux-low.c	2010-11-26 10:03:01.905288172 +0100

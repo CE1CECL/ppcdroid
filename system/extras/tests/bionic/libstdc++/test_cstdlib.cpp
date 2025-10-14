@@ -43,7 +43,7 @@ namespace android
 using ::exit;
 using ::abort;
 using ::atexit;
-using ::on_exit;
+//using ::on_exit;
 
 using ::getenv;
 using ::putenv;

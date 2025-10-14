@@ -35,6 +35,10 @@ main ()
  int pid,child;
  int status;
 
+#ifdef __ANDROID__
+#define clone __sys_clone
+#endif
+
  pid = clone (clone_child, clone_stack + 3 * PAGE_SIZE,
               CLONE_VM | SIGCHLD, NULL);
  if (pid < 0)

@@ -148,6 +148,10 @@ if [ "$REVERSE" = "no" ] ; then
             copy_directory "$OUT_INCLUDE_ABI/bits" "$OUT_LIBS/x86/include/bits"
             copy_file_list "$ABI_STL/lib" "$OUT_LIBS/x86" "libstdc++.*"
             ;;
+        powerpc)
+            copy_directory "$OUT_INCLUDE_ABI/bits" "$OUT_LIBS/ppc/include/bits"
+            copy_file_list "$ABI_STL/lib" "$OUT_LIBS/ppc" "libstdc++.*"
+            ;;
         *)
             dump "ERROR: Unsupported NDK architecture!"
     esac
@@ -174,6 +178,10 @@ else # REVERSE = yes
         x86)
             copy_directory "$OUT_LIBS/x86/include/bits" "$ABI_STL_INCLUDE_TARGET/bits"
             copy_file_list "$OUT_LIBS/x86" "$ABI_STL/lib" "libstdc++.*"
+            ;;
+        powerpc)
+            copy_directory "$OUT_LIBS/ppc/include/bits" "$ABI_STL_INCLUDE_TARGET/bits"
+            copy_file_list "$OUT_LIBS/ppc" "$ABI_STL/lib" "libstdc++.*"
             ;;
         *)
             dump "ERROR: Unsupported NDK architecture!"

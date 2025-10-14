@@ -76,14 +76,19 @@ test_basename_r(char*  _input, const char*  _expected_content, int  _expected, c
             return;
         }
     }
+    else if ( _buff == NULL ) {
+        printf("OK: basename_r(\"%s\", <buff>, %d) where buff is NULL\n",
+            _input, _bufflen);
+        return;
+    }
     else if ( memcmp( _buff, _expected_content, ret ) ) {
         fprintf(stderr,
                 "KO: basename_r(\"%s\", <buff>, %d) returned \"%s\", expected \"%s\"\n",
                 _input, _bufflen, _buff, _expected_content );
         fail += 1;
         return;
-    }
-    printf("OK: basename_r(\"%s\", <buff>, %d) returned \"%s\"\n",
+    } else
+        printf("OK: basename_r(\"%s\", <buff>, %d) returned \"%s\"\n",
             _input, _bufflen, _expected_content );
 }
 
@@ -109,14 +114,19 @@ test_dirname_r(char*  _input, const char*  _expected_content, int  _expected, ch
             return;
         }
     }
+    else if ( _buff == NULL ) {
+        printf("OK: dirname_r(\"%s\", <buff>, %d) where buff is NULL\n",
+            _input, _bufflen);
+        return;
+    }
     else if ( memcmp( _buff, _expected_content, ret ) ) {
         fprintf(stderr,
                 "KO: dirname_r(\"%s\", <buff>, %d) returned \"%s\", expected \"%s\"\n",
                 _input, _bufflen, _buff, _expected_content );
         fail += 1;
         return;
-    }
-    printf("OK: dirname_r(\"%s\", <buff>, %d) returned \"%s\"\n",
+    } else
+        printf("OK: dirname_r(\"%s\", <buff>, %d) returned \"%s\"\n",
             _input, _bufflen, _expected_content );
 }
 #endif

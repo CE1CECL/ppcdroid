@@ -85,6 +85,14 @@ ifneq (,$(filter android-6 android-7,$(APP_PLATFORM)))
     $(call ndk_log,  Adjusting APP_PLATFORM to $(APP_PLATFORM))
 endif
 
+# SPECIAL CASE: No early platforms on PPC. Adjust accordingly!
+ifeq ($(APP_ABI),powerpc)
+ifneq (,$(filter android-3 android-4 android-5 android-8,$(APP_PLATFORM)))
+    APP_PLATFORM := android-9
+    $(call ndk_log,  Adjusting APP_PLATFORM to $(APP_PLATFORM))
+endif
+endif
+
 # Check that the value of APP_PLATFORM corresponds to a known platform
 # If not, we're going to use the max supported platform value.
 #

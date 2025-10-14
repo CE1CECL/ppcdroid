@@ -35617,6 +35617,17 @@
  visibility="public"
 >
 </field>
+<field name="ETHERNET_SERVICE"
+ type="java.lang.String"
+ transient="false"
+ volatile="false"
+ value="&quot;ethernet&quot;"
+ static="true"
+ final="true"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</field>
 <field name="INPUT_METHOD_SERVICE"
  type="java.lang.String"
  transient="false"
@@ -93267,6 +93278,17 @@
  visibility="public"
 >
 </field>
+<field name="TYPE_ETHERNET"
+ type="int"
+ transient="false"
+ volatile="false"
+ value="9"
+ static="true"
+ final="true"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</field>
 <field name="TYPE_MOBILE"
  type="int"
  transient="false"
@@ -96231,6 +96253,539 @@
 >
 <parameter name="value" type="java.lang.String">
 </parameter>
+</method>
+</interface>
+</package>
+<package name="android.net.ethernet"
+>
+<class name="EthernetDevInfo"
+ extends="java.lang.Object"
+ abstract="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+<implements name="android.os.Parcelable">
+</implements>
+<constructor name="EthernetDevInfo"
+ type="android.net.ethernet.EthernetDevInfo"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</constructor>
+<method name="describeContents"
+ return="int"
+ abstract="false"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</method>
+<method name="getConnectMode"
+ return="java.lang.String"
+ abstract="false"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</method>
+<method name="getDnsAddr"
+ return="java.lang.String"
+ abstract="false"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</method>
+<method name="getIfName"
+ return="java.lang.String"
+ abstract="false"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</method>
+<method name="getIpAddress"
+ return="java.lang.String"
+ abstract="false"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</method>
+<method name="getNetMask"
+ return="java.lang.String"
+ abstract="false"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</method>
+<method name="getRouteAddr"
+ return="java.lang.String"
+ abstract="false"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</method>
+<method name="setConnectMode"
+ return="boolean"
+ abstract="false"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+<parameter name="mode" type="java.lang.String">
+</parameter>
+</method>
+<method name="setDnsAddr"
+ return="void"
+ abstract="false"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+<parameter name="dns" type="java.lang.String">
+</parameter>
+</method>
+<method name="setIfName"
+ return="void"
+ abstract="false"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+<parameter name="ifname" type="java.lang.String">
+</parameter>
+</method>
+<method name="setIpAddress"
+ return="void"
+ abstract="false"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+<parameter name="ip" type="java.lang.String">
+</parameter>
+</method>
+<method name="setNetMask"
+ return="void"
+ abstract="false"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+<parameter name="ip" type="java.lang.String">
+</parameter>
+</method>
+<method name="setRouteAddr"
+ return="void"
+ abstract="false"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+<parameter name="route" type="java.lang.String">
+</parameter>
+</method>
+<method name="writeToParcel"
+ return="void"
+ abstract="false"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+<parameter name="dest" type="android.os.Parcel">
+</parameter>
+<parameter name="flags" type="int">
+</parameter>
+</method>
+<field name="ETHERNET_CONN_MODE_DHCP"
+ type="java.lang.String"
+ transient="false"
+ volatile="false"
+ value="&quot;dhcp&quot;"
+ static="true"
+ final="true"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</field>
+<field name="ETHERNET_CONN_MODE_MANUAL"
+ type="java.lang.String"
+ transient="false"
+ volatile="false"
+ value="&quot;manual&quot;"
+ static="true"
+ final="true"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</field>
+</class>
+<class name="EthernetManager"
+ extends="java.lang.Object"
+ abstract="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+<constructor name="EthernetManager"
+ type="android.net.ethernet.EthernetManager"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+<parameter name="service" type="android.net.ethernet.IEthernetManager">
+</parameter>
+<parameter name="handler" type="android.os.Handler">
+</parameter>
+</constructor>
+<method name="getDeviceNameList"
+ return="java.lang.String[]"
+ abstract="false"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</method>
+<method name="getSavedConfig"
+ return="android.net.ethernet.EthernetDevInfo"
+ abstract="false"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</method>
+<method name="getState"
+ return="int"
+ abstract="false"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</method>
+<method name="getTotalInterface"
+ return="int"
+ abstract="false"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</method>
+<method name="isConfigured"
+ return="boolean"
+ abstract="false"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</method>
+<method name="updateDevInfo"
+ return="void"
+ abstract="false"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+<parameter name="info" type="android.net.ethernet.EthernetDevInfo">
+</parameter>
+</method>
+<field name="ETHERNET_DEVICE_SCAN_RESULT_READY"
+ type="int"
+ transient="false"
+ volatile="false"
+ value="0"
+ static="true"
+ final="true"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</field>
+<field name="ETHERNET_STATE_CHANGED_ACTION"
+ type="java.lang.String"
+ transient="false"
+ volatile="false"
+ value="&quot;android.net.ethernet.ETHERNET_STATE_CHANGED&quot;"
+ static="true"
+ final="true"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</field>
+<field name="ETHERNET_STATE_DISABLED"
+ type="int"
+ transient="false"
+ volatile="false"
+ value="1"
+ static="true"
+ final="true"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</field>
+<field name="ETHERNET_STATE_ENABLED"
+ type="int"
+ transient="false"
+ volatile="false"
+ value="2"
+ static="true"
+ final="true"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</field>
+<field name="ETHERNET_STATE_UNKNOWN"
+ type="int"
+ transient="false"
+ volatile="false"
+ value="0"
+ static="true"
+ final="true"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</field>
+<field name="EXTRA_ETHERNET_STATE"
+ type="java.lang.String"
+ transient="false"
+ volatile="false"
+ value="&quot;ETHERNET_state&quot;"
+ static="true"
+ final="true"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</field>
+<field name="EXTRA_NETWORK_INFO"
+ type="java.lang.String"
+ transient="false"
+ volatile="false"
+ value="&quot;networkInfo&quot;"
+ static="true"
+ final="true"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</field>
+<field name="EXTRA_PREVIOUS_ETHERNET_STATE"
+ type="java.lang.String"
+ transient="false"
+ volatile="false"
+ value="&quot;previous_ETHERNET_state&quot;"
+ static="true"
+ final="true"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</field>
+<field name="NETWORK_STATE_CHANGED_ACTION"
+ type="java.lang.String"
+ transient="false"
+ volatile="false"
+ value="&quot;android.net.ethernet.STATE_CHANGE&quot;"
+ static="true"
+ final="true"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</field>
+<field name="TAG"
+ type="java.lang.String"
+ transient="false"
+ volatile="false"
+ value="&quot;EthernetManager&quot;"
+ static="true"
+ final="true"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</field>
+</class>
+<interface name="IEthernetManager"
+ abstract="true"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+<implements name="android.os.IInterface">
+</implements>
+<method name="getDeviceNameList"
+ return="java.lang.String[]"
+ abstract="true"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+<exception name="RemoteException" type="android.os.RemoteException">
+</exception>
+</method>
+<method name="getSavedConfig"
+ return="android.net.ethernet.EthernetDevInfo"
+ abstract="true"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+<exception name="RemoteException" type="android.os.RemoteException">
+</exception>
+</method>
+<method name="getState"
+ return="int"
+ abstract="true"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+<exception name="RemoteException" type="android.os.RemoteException">
+</exception>
+</method>
+<method name="getTotalInterface"
+ return="int"
+ abstract="true"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+<exception name="RemoteException" type="android.os.RemoteException">
+</exception>
+</method>
+<method name="isConfigured"
+ return="boolean"
+ abstract="true"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+<exception name="RemoteException" type="android.os.RemoteException">
+</exception>
+</method>
+<method name="setMode"
+ return="void"
+ abstract="true"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+<parameter name="arg0" type="java.lang.String">
+</parameter>
+<exception name="RemoteException" type="android.os.RemoteException">
+</exception>
+</method>
+<method name="setState"
+ return="void"
+ abstract="true"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+<parameter name="arg0" type="int">
+</parameter>
+<exception name="RemoteException" type="android.os.RemoteException">
+</exception>
+</method>
+<method name="updateDevInfo"
+ return="void"
+ abstract="true"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+<parameter name="arg0" type="android.net.ethernet.EthernetDevInfo">
+</parameter>
+<exception name="RemoteException" type="android.os.RemoteException">
+</exception>
 </method>
 </interface>
 </package>
@@ -145505,6 +146060,94 @@
  visibility="public"
 >
 </field>
+<field name="ETHERNET_CONF"
+ type="java.lang.String"
+ transient="false"
+ volatile="false"
+ value="&quot;ethernet_conf&quot;"
+ static="true"
+ final="true"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</field>
+<field name="ETHERNET_DNS"
+ type="java.lang.String"
+ transient="false"
+ volatile="false"
+ value="&quot;ethernet_dns&quot;"
+ static="true"
+ final="true"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</field>
+<field name="ETHERNET_IFNAME"
+ type="java.lang.String"
+ transient="false"
+ volatile="false"
+ value="&quot;ethernet_ifname&quot;"
+ static="true"
+ final="true"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</field>
+<field name="ETHERNET_IP"
+ type="java.lang.String"
+ transient="false"
+ volatile="false"
+ value="&quot;ethernet_ip&quot;"
+ static="true"
+ final="true"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</field>
+<field name="ETHERNET_MASK"
+ type="java.lang.String"
+ transient="false"
+ volatile="false"
+ value="&quot;ethernet_netmask&quot;"
+ static="true"
+ final="true"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</field>
+<field name="ETHERNET_MODE"
+ type="java.lang.String"
+ transient="false"
+ volatile="false"
+ value="&quot;ethernet_mode&quot;"
+ static="true"
+ final="true"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</field>
+<field name="ETHERNET_ON"
+ type="java.lang.String"
+ transient="false"
+ volatile="false"
+ value="&quot;ethernet_on&quot;"
+ static="true"
+ final="true"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</field>
+<field name="ETHERNET_ROUTE"
+ type="java.lang.String"
+ transient="false"
+ volatile="false"
+ value="&quot;ethernet_iproute&quot;"
+ static="true"
+ final="true"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</field>
 <field name="HTTP_PROXY"
  type="java.lang.String"
  transient="false"
@@ -183540,6 +184183,17 @@
 <parameter name="pointerIndex" type="int">
 </parameter>
 </method>
+<method name="getXOffset"
+ return="float"
+ abstract="false"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="true"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</method>
 <method name="getXPrecision"
  return="float"
  abstract="false"
@@ -183574,6 +184228,17 @@
 >
 <parameter name="pointerIndex" type="int">
 </parameter>
+</method>
+<method name="getYOffset"
+ return="float"
+ abstract="false"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="true"
+ deprecated="not deprecated"
+ visibility="public"
+>
 </method>
 <method name="getYPrecision"
  return="float"

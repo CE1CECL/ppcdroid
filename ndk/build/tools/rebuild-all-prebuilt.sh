@@ -44,6 +44,9 @@ RELEASE=`date +%Y%m%d`
 PACKAGE_DIR=/tmp/ndk-prebuilt/prebuilt-$RELEASE
 register_var_option "--package-dir=<path>" PACKAGE_DIR "Put prebuilt tarballs into <path>."
 
+OPTION_TRY_PPC=no
+register_var_option "--try-ppc" OPTION_TRY_PPC "Build experimental PowerPC toolchain too."
+
 OPTION_TRY_X86=no
 register_var_option "--try-x86" OPTION_TRY_X86 "Build experimental x86 toolchain too."
 
@@ -231,32 +234,41 @@ build_gdbserver ()
     package_it "$1 gdbserver" "$1-gdbserver" "toolchains/$1/prebuilt/gdbserver"
 }
 
-build_toolchain arm-eabi-4.4.0
-build_gdbserver arm-eabi-4.4.0
+#build_toolchain arm-eabi-4.4.0
+#build_gdbserver arm-eabi-4.4.0
 
-build_toolchain arm-linux-androideabi-4.4.3 --copy-libstdcxx
-build_gdbserver arm-linux-androideabi-4.4.3
+#build_toolchain arm-linux-androideabi-4.4.3 --copy-libstdcxx
+#build_gdbserver arm-linux-androideabi-4.4.3
+
+if [ "$OPTION_TRY_X86" = "yes" ] ; then
+    build_toolchain x86-4.2.1
+    build_gdbserver x86-4.2.1
+fi
+
+if [ "$OPTION_TRY_PPC" = "yes" ] ; then
+#    build_toolchain powerpc-android-linux-4.4.3
+    build_toolchain powerpc-android-linux-4.4.3 --copy-libstdcxx
+    build_gdbserver powerpc-android-linux-4.4.3
+fi
 
 # We need to package the libsupc++ binaries on Linux since the GCC build
 # scripts cannot build them with --mingw option.
 if [ "$HOST_OS" = "linux" ] ; then
     LIBSUPC_DIR="toolchains/arm-linux-androideabi-4.4.3/prebuilt/$HOST_TAG/arm-linux-androideabi/lib"
-    package_it "GNU libsupc++ armeabi libs" "gnu-libsupc++-armeabi" "$LIBSUPC_DIR/libsupc++.a $LIBSUPC_DIR/thumb/libsupc++.a"
-    package_it "GNU libsupc++ armeabi-v7a libs" "gnu-libsupc++-armeabi-v7a" "$LIBSUPC_DIR/armv7-a/libsupc++.a $LIBSUPC_DIR/armv7-a/thumb/libsupc++.a"
+    #package_it "GNU libsupc++ armeabi libs" "gnu-libsupc++-armeabi" "$LIBSUPC_DIR/libsupc++.a $LIBSUPC_DIR/thumb/libsupc++.a"
+    #package_it "GNU libsupc++ armeabi-v7a libs" "gnu-libsupc++-armeabi-v7a" "$LIBSUPC_DIR/armv7-a/libsupc++.a $LIBSUPC_DIR/armv7-a/thumb/libsupc++.a"
 fi
 
 if [ "$MINGW" != "yes" ] ; then
     package_it "GNU libstdc++ headers" "gnu-libstdc++-headers" "sources/cxx-stl/gnu-libstdc++/include"
-    package_it "GNU libstdc++ armeabi libs" "gnu-libstdc++-libs-armeabi" "sources/cxx-stl/gnu-libstdc++/libs/armeabi"
-    package_it "GNU libstdc++ armeabi-v7a libs" "gnu-libstdc++-libs-armeabi-v7a" "sources/cxx-stl/gnu-libstdc++/libs/armeabi-v7a"
+    #package_it "GNU libstdc++ armeabi libs" "gnu-libstdc++-libs-armeabi" "sources/cxx-stl/gnu-libstdc++/libs/armeabi"
+    #package_it "GNU libstdc++ armeabi-v7a libs" "gnu-libstdc++-libs-armeabi-v7a" "sources/cxx-stl/gnu-libstdc++/libs/armeabi-v7a"
     if [ "$OPTION_TRY_X86" = "yes" ] ; then
         package_it "GNU libstdc++ x86 libs" "gnu-libstdc++-libs-x86" "sources/cxx-stl/gnu-libstdc++/libs/x86"
     fi
-fi
-
-if [ "$OPTION_TRY_X86" = "yes" ] ; then
-    build_toolchain x86-4.2.1
-    build_gdbserver x86-4.2.1
+    if [ "$OPTION_TRY_PPC" = "yes" ] ; then
+        package_it "GNU libstdc++ PowerPC libs" "gnu-libstdc++-libs-ppc" "sources/cxx-stl/gnu-libstdc++/libs/ppc"
+    fi
 fi
 
 # Rebuild prebuilt libraries
@@ -266,14 +278,20 @@ if [ "$MINGW" != "yes" ] ; then
         TOOLCHAIN_FLAGS=
     else
         BUILD_STLPORT_FLAGS="--package-dir=\"$PACKAGE_DIR\""
-        TOOLCHAIN_FLAGS="--toolchain-pkg=\"$PACKAGE_DIR/arm-linux-androideabi-4.4.3-$HOST_TAG.tar.bz2\""
+        TOOLCHAIN_FLAGS="--toolchain-pkg=\"$PACKAGE_DIR/powerpc-android-linux-4.4.3-$HOST_TAG.tar.bz2\""
     fi
-    $ANDROID_NDK_ROOT/build/tools/build-stlport.sh $BUILD_STLPORT_FLAGS $TOOLCHAIN_FLAGS
+    #$ANDROID_NDK_ROOT/build/tools/build-stlport.sh $BUILD_STLPORT_FLAGS $TOOLCHAIN_FLAGS
     if [ "$OPTION_TRY_X86" = "yes" ]; then
         if [ -n "$PACKAGE_DIR" ] ; then
             TOOLCHAIN_FLAGS="--toolchain-pkg=\"$PACKAGE_DIR/x86-4.2.1-$HOST_TAG.tar.bz2\""
         fi
-        $ANDROID_NDK_ROOT/build/tools/build-stlport.sh $BUILD_STLPORT_FLAGS--abis=x86 $TOOLCHAIN_FLAGS
+        $ANDROID_NDK_ROOT/build/tools/build-stlport.sh $BUILD_STLPORT_FLAGS --abis=x86 $TOOLCHAIN_FLAGS
+    fi
+    if [ "$OPTION_TRY_PPC" = "yes" ]; then
+        if [ -n "$PACKAGE_DIR" ] ; then
+            TOOLCHAIN_FLAGS="--toolchain-pkg=\"$PACKAGE_DIR/powerpc-android-linux-4.4.3-$HOST_TAG.tar.bz2\""
+        fi
+        $ANDROID_NDK_ROOT/build/tools/build-stlport.sh $BUILD_STLPORT_FLAGS --abis=powerpc $TOOLCHAIN_FLAGS
     fi
 else
     dump "Skipping STLport binaries build (--mingw option being used)"

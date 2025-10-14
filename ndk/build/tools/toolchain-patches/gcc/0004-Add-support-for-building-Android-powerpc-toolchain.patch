@@ -1,0 +1,214 @@
+From ec31b5067aa99d6e4045bc5e1ce9dba8259c8ad6 Mon Sep 17 00:00:00 2001
+From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+Date: Tue, 10 Apr 2012 15:52:09 +0400
+Subject: [PATCH 4/4] Add support for building Android powerpc toolchain
+
+Signed-off-by: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+---
+ gcc-4.4.3/gcc/config.gcc              |    4 +-
+ gcc-4.4.3/gcc/config/arm/linux-eabi.h |    2 +-
+ gcc-4.4.3/gcc/config/linux-android.h  |    4 +-
+ gcc-4.4.3/gcc/config/rs6000/linux.h   |    2 +
+ gcc-4.4.3/gcc/config/rs6000/sysv4.h   |   58 ++++++++++++++++++++++++++------
+ gcc-4.4.3/gcc/unwind-dw2-fde-glibc.c  |    4 ++-
+ 6 files changed, 57 insertions(+), 17 deletions(-)
+
+diff --git a/gcc-4.4.3/gcc/config.gcc b/gcc-4.4.3/gcc/config.gcc
+index f79f0c4..f1967ce 100644
+--- a/gcc-4.4.3/gcc/config.gcc
++++ b/gcc-4.4.3/gcc/config.gcc
+@@ -509,7 +509,7 @@ case ${target} in
+       tm_defines="$tm_defines OPTION_GLIBC=1";;
+   esac
+   case $target in
+-    *-*-*android*)
++    *-*-*android* | *-android-linux-*)
+       tm_defines="$tm_defines DEFAULT_LIBC=LIBC_BIONIC"
+       ;;
+     *-*-*uclibc*)
+@@ -532,7 +532,7 @@ case ${target} in
+   esac
+   # Enable compilation for Android by default for *android* targets.
+   case $target in
+-    *-*-*android*)
++    *-*-*android* | *-android-linux-*)
+       tm_defines="$tm_defines ANDROID_DEFAULT=1"
+       ;;
+     *)
+diff --git a/gcc-4.4.3/gcc/config/arm/linux-eabi.h b/gcc-4.4.3/gcc/config/arm/linux-eabi.h
+index 6dd4443..145a839 100644
+--- a/gcc-4.4.3/gcc/config/arm/linux-eabi.h
++++ b/gcc-4.4.3/gcc/config/arm/linux-eabi.h
+@@ -73,7 +73,7 @@
+ #undef  CC1_SPEC
+ #define CC1_SPEC                                               \
+   LINUX_OR_ANDROID_CC (LINUX_TARGET_CC1_SPEC,                  \
+-                      LINUX_TARGET_CC1_SPEC " " ANDROID_CC1_SPEC)
++                      LINUX_TARGET_CC1_SPEC " " ANDROID_CC1_SPEC("-fpic"))
+ 
+ #define CC1PLUS_SPEC \
+   LINUX_OR_ANDROID_CC ("", ANDROID_CC1PLUS_SPEC)
+diff --git a/gcc-4.4.3/gcc/config/linux-android.h b/gcc-4.4.3/gcc/config/linux-android.h
+index 10459dd..f9be559 100644
+--- a/gcc-4.4.3/gcc/config/linux-android.h
++++ b/gcc-4.4.3/gcc/config/linux-android.h
+@@ -35,9 +35,9 @@
+ #define ANDROID_LINK_SPEC \
+   "%{shared: -Bsymbolic}"
+ 
+-#define ANDROID_CC1_SPEC						\
++#define ANDROID_CC1_SPEC(ANDROID_PIC_DEFAULT)				\
+   "%{!mglibc:%{!muclibc:%{!mbionic: -mbionic}}} "			\
+-  "%{!fno-pic:%{!fno-PIC:%{!fpic:%{!fPIC: -fpic}}}}"
++  "%{!fno-pic:%{!fno-PIC:%{!fpic:%{!fPIC: " ANDROID_PIC_DEFAULT "}}}}"
+ 
+ #define ANDROID_CC1PLUS_SPEC						\
+   "%{!fexceptions:%{!fno-exceptions: -fexceptions}} "		\
+diff --git a/gcc-4.4.3/gcc/config/rs6000/linux.h b/gcc-4.4.3/gcc/config/rs6000/linux.h
+index d41c0dc..a4ab45c 100644
+--- a/gcc-4.4.3/gcc/config/rs6000/linux.h
++++ b/gcc-4.4.3/gcc/config/rs6000/linux.h
+@@ -49,6 +49,8 @@
+       builtin_assert ("cpu=powerpc");		\
+       builtin_assert ("machine=powerpc");	\
+       TARGET_OS_SYSV_CPP_BUILTINS ();		\
++      if (OPTION_ANDROID)			\
++        builtin_define ("__ANDROID__");		\
+     }						\
+   while (0)
+ 
+diff --git a/gcc-4.4.3/gcc/config/rs6000/sysv4.h b/gcc-4.4.3/gcc/config/rs6000/sysv4.h
+index 339d518..e32b1ec 100644
+--- a/gcc-4.4.3/gcc/config/rs6000/sysv4.h
++++ b/gcc-4.4.3/gcc/config/rs6000/sysv4.h
+@@ -620,7 +620,7 @@ SVR4_ASM_SPEC \
+ #endif
+ 
+ /* Pass -G xxx to the compiler and set correct endian mode.  */
+-#define	CC1_SPEC "%{G*} %(cc1_cpu) \
++#define	ORIG_CC1_SPEC "%{G*} %(cc1_cpu) \
+ %{mlittle|mlittle-endian: %(cc1_endian_little);           \
+   mbig   |mbig-endian   : %(cc1_endian_big);              \
+   mcall-aixdesc |					  \
+@@ -645,6 +645,17 @@ SVR4_ASM_SPEC \
+ %{!mbss-plt: %{!msecure-plt: %(cc1_secure_plt_default)}} \
+ %{profile: -p}"
+ 
++#define CC1_SPEC					\
++  LINUX_OR_ANDROID_CC(ORIG_CC1_SPEC,			\
++		  ORIG_CC1_SPEC				\
++		  " -fno-short-enums"			\
++		  ANDROID_CC1_SPEC("-fPIC"))
++
++#define CC1PLUS_SPEC \
++  LINUX_OR_ANDROID_CC ("", ANDROID_CC1PLUS_SPEC)
++
++
++
+ /* Don't put -Y P,<path> for cross compilers.  */
+ #ifndef CROSS_DIRECTORY_STRUCTURE
+ #define LINK_PATH_SPEC "\
+@@ -879,43 +890,68 @@ SVR4_ASM_SPEC \
+   %{symbolic:-Bsymbolic}"
+ 
+ /* GNU/Linux support.  */
+-#define LIB_LINUX_SPEC "%{mnewlib: --start-group -llinux -lc --end-group } \
++#define ORIG_LIB_LINUX_SPEC "%{mnewlib: --start-group -llinux -lc --end-group } \
+ %{!mnewlib: %{pthread:-lpthread} %{shared:-lc} \
+ %{!shared: %{profile:-lc_p} %{!profile:-lc}}}"
++#define LIB_LINUX_SPEC \
++  LINUX_OR_ANDROID_LD (ORIG_LIB_LINUX_SPEC, \
++  ORIG_LIB_LINUX_SPEC " " ANDROID_LIB_SPEC)
+ 
+ #ifdef HAVE_LD_PIE
+-#define	STARTFILE_LINUX_SPEC "\
++#define	ORIG_STARTFILE_LINUX_SPEC "\
+ %{!shared: %{pg|p|profile:gcrt1.o%s;pie:Scrt1.o%s;:crt1.o%s}} \
+ %{mnewlib:ecrti.o%s;:crti.o%s} \
+ %{static:crtbeginT.o%s;shared|pie:crtbeginS.o%s;:crtbegin.o%s}"
+ #else
+-#define	STARTFILE_LINUX_SPEC "\
++#define	ORIG_STARTFILE_LINUX_SPEC "\
+ %{!shared: %{pg|p|profile:gcrt1.o%s;:crt1.o%s}} \
+ %{mnewlib:ecrti.o%s;:crti.o%s} \
+ %{static:crtbeginT.o%s;shared|pie:crtbeginS.o%s;:crtbegin.o%s}"
+ #endif
++#define STARTFILE_LINUX_SPEC \
++  LINUX_OR_ANDROID_LD (ORIG_STARTFILE_LINUX_SPEC, ANDROID_STARTFILE_SPEC)
+ 
+-#define	ENDFILE_LINUX_SPEC "\
++#define	ORIG_ENDFILE_LINUX_SPEC "\
+ %{shared|pie:crtendS.o%s;:crtend.o%s} \
+ %{mnewlib:ecrtn.o%s;:crtn.o%s}"
++#define ENDFILE_LINUX_SPEC \
++	LINUX_OR_ANDROID_LD (ORIG_ENDFILE_LINUX_SPEC, \
++			ANDROID_ENDFILE_SPEC)
+ 
+ #define LINK_START_LINUX_SPEC ""
+ 
+ #define GLIBC_DYNAMIC_LINKER "/lib/ld.so.1"
+ #define UCLIBC_DYNAMIC_LINKER "/lib/ld-uClibc.so.0"
+-#if DEFAULT_LIBC == LIBC_UCLIBC
+-#define CHOOSE_DYNAMIC_LINKER(G, U) "%{mglibc:" G ";:" U "}"
+-#elif DEFAULT_LIBC == LIBC_GLIBC
+-#define CHOOSE_DYNAMIC_LINKER(G, U) "%{muclibc:" U ";:" G "}"
++/* Determine which dynamic linker to use depending on whether GLIBC or
++   uClibc or Bionic is the default C library and whether
++   -muclibc or -mglibc or -mbionic has been passed to change the default.  */
++
++#define CHOOSE_DYNAMIC_LINKER1(LIBC1, LIBC2, LIBC3, LD1, LD2, LD3)     \
++  "%{" LIBC2 ":" LD2 ";:%{" LIBC3 ":" LD3 ";:" LD1 "}}"
++
++#if DEFAULT_LIBC == LIBC_GLIBC
++#define CHOOSE_DYNAMIC_LINKER(G, U, B) \
++  CHOOSE_DYNAMIC_LINKER1 ("mglibc", "muclibc", "mbionic", G, U, B)
++#elif DEFAULT_LIBC == LIBC_UCLIBC
++#define CHOOSE_DYNAMIC_LINKER(G, U, B) \
++  CHOOSE_DYNAMIC_LINKER1 ("muclibc", "mglibc", "mbionic", U, G, B)
++#elif DEFAULT_LIBC == LIBC_BIONIC
++#define CHOOSE_DYNAMIC_LINKER(G, U, B) \
++  CHOOSE_DYNAMIC_LINKER1 ("mbionic", "mglibc", "muclibc", B, G, U)
+ #else
+ #error "Unsupported DEFAULT_LIBC"
+ #endif
++
++#define BIONIC_DYNAMIC_LINKER "/system/bin/linker"
+ #define LINUX_DYNAMIC_LINKER \
+-  CHOOSE_DYNAMIC_LINKER (GLIBC_DYNAMIC_LINKER, UCLIBC_DYNAMIC_LINKER)
++  CHOOSE_DYNAMIC_LINKER (GLIBC_DYNAMIC_LINKER, UCLIBC_DYNAMIC_LINKER, BIONIC_DYNAMIC_LINKER)
+ 
+-#define LINK_OS_LINUX_SPEC "-m elf32ppclinux %{!shared: %{!static: \
++#define ORIG_LINK_OS_LINUX_SPEC "-m elf32ppclinux %{!shared: %{!static: \
+   %{rdynamic:-export-dynamic} \
+   %{!dynamic-linker:-dynamic-linker " LINUX_DYNAMIC_LINKER "}}}"
++#define LINK_OS_LINUX_SPEC \
++  LINUX_OR_ANDROID_LD(ORIG_LINK_OS_LINUX_SPEC, \
++			ORIG_LINK_OS_LINUX_SPEC " " ANDROID_LINK_SPEC)
+ 
+ #if defined(HAVE_LD_EH_FRAME_HDR)
+ # define LINK_EH_SPEC "%{!static:--eh-frame-hdr} "
+diff --git a/gcc-4.4.3/gcc/unwind-dw2-fde-glibc.c b/gcc-4.4.3/gcc/unwind-dw2-fde-glibc.c
+index d246ae1..d6ed4ab 100644
+--- a/gcc-4.4.3/gcc/unwind-dw2-fde-glibc.c
++++ b/gcc-4.4.3/gcc/unwind-dw2-fde-glibc.c
+@@ -33,7 +33,7 @@
+ #include "tconfig.h"
+ #include "tsystem.h"
+ #ifndef inhibit_libc
+-#include <link.h>
++#include <elf.h>
+ #endif
+ #include "coretypes.h"
+ #include "tm.h"
+@@ -49,6 +49,8 @@
+     && (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ > 2) \
+ 	|| (__GLIBC__ == 2 && __GLIBC_MINOR__ == 2 && defined(DT_CONFIG)))
+ 
++#include <link.h>
++
+ #ifndef __RELOC_POINTER
+ # define __RELOC_POINTER(ptr, base) ((ptr) + (base))
+ #endif
+-- 
+1.7.9.1
+

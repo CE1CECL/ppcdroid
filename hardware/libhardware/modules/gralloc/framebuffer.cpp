@@ -102,7 +102,11 @@ static int fb_post(struct framebuffer_device_t* dev, buffer_handle_t buffer)
         const size_t offset = hnd->base - m->framebuffer->base;
         m->info.activate = FB_ACTIVATE_VBL;
         m->info.yoffset = offset / m->finfo.line_length;
+#ifndef __powerpc__
         if (ioctl(m->framebuffer->fd, FBIOPUT_VSCREENINFO, &m->info) == -1) {
+#else
+        if (ioctl(m->framebuffer->fd, FBIOPAN_DISPLAY, &m->info) == -1) {
+#endif
             LOGE("FBIOPUT_VSCREENINFO failed");
             m->base.unlock(&m->base, buffer); 
             return -errno;

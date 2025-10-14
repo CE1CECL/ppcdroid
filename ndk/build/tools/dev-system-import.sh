@@ -157,6 +157,10 @@ case $ARCH in
         TOOLCHAIN=x86-4.2.1
         PREFIX=i686-android-linux-gnu
         ;;
+    powerpc)
+        TOOLCHAIN=powerpc-android-linux-4.4.3
+        PREFIX=powerpc-android-linux
+        ;;
     *)
         echo "ERROR: Unsupported architecture: $ARCH"
         exit 1
@@ -422,8 +426,9 @@ copy_arch_system_headers ()
 
 reset_symbol_excludes
 
+if platform_check 9; then
 # API level 3
-if platform_check 3; then
+#if platform_check 3; then
     # Remove a few internal symbols that should not be exposed
     # from the C library (we plan to clean that up soon by using the
     # "hidden" visibility attribute in the near future).
@@ -467,20 +472,22 @@ if platform_check 3; then
     #        of the platform headers in order to make room for other STL
     #        implementations (e.g. STLport or GNU Libstdc++-v3)
     #
+    > $SYMBOL_EXCLUDES # Override C++ excluding
     copy_system_shared_library libstdc++
     copy_system_static_library libstdc++
 
     # We link gdbserver statically with libthreadb, so there is no point
     # in copying the shared library (which by the way has an unstable ABI
     # anyway).
+    copy_system_shared_library libthread_db
     copy_system_static_library libthread_db
     copy_system_headers $ANDROID_ROOT/bionic/libthread_db/include thread_db.h
 
     copy_system_headers $ANDROID_ROOT/dalvik/libnativehelper/include/nativehelper jni.h
-fi
+#fi
 
 # API level 4
-if platform_check 4; then
+#if platform_check 4; then
     copy_system_shared_library libGLESv1_CM
     copy_system_headers $ANDROID_ROOT/frameworks/base/opengl/include \
         GLES/gl.h \
@@ -489,26 +496,26 @@ if platform_check 4; then
 
     copy_system_headers $ANDROID_ROOT/frameworks/base/opengl/include \
         KHR/khrplatform.h
-fi
+#fi
 
 # API level 5
-if platform_check 5; then
+#if platform_check 5; then
     copy_system_shared_library libGLESv2
     copy_system_headers $ANDROID_ROOT/frameworks/base/opengl/include \
         GLES2/gl2.h \
         GLES2/gl2ext.h \
         GLES2/gl2platform.h
-fi
+#fi
 
 # API level 8
-if platform_check 8; then
+#if platform_check 8; then
     copy_system_shared_library libandroid
     copy_system_headers $ANDROID_ROOT/frameworks/base/native/include \
         android/bitmap.h
-fi
+#fi
 
 # API level 9
-if platform_check 9; then
+#if platform_check 9; then
     copy_system_object_file crtbegin_so
     copy_system_object_file crtend_so
 
@@ -542,6 +549,7 @@ if platform_check 9; then
         SLES/OpenSLES_Android.h \
         SLES/OpenSLES_AndroidConfiguration.h \
         SLES/OpenSLES_Platform.h
+#fi
 fi
 
 clear_symbol_excludes

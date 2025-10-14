@@ -51,6 +51,7 @@ static void* _thread1(void *__u __attribute__((unused)))
 static void* _thread2(void *__u __attribute__((unused)))
 {
     int cnt = 2;
+    sleep(1);
     while(cnt--) {
         printf("2: obtaining mutex\n");
         pthread_mutex_lock(&lock);

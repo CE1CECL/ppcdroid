@@ -55,7 +55,7 @@ NO_GIT=no
 register_var_option "--no-git" NO_GIT "Don't use git to list input files, take all of them."
 
 # set of toolchain prebuilts we need to package
-TOOLCHAINS="arm-eabi-4.4.0 arm-linux-androideabi-4.4.3"
+TOOLCHAINS="arm-eabi-4.4.0 arm-linux-androideabi-4.4.3 powerpc-android-linux-4.4.3"
 register_var_option "--toolchains=<list>" TOOLCHAINS "Specify list of toolchains."
 
 # set of platforms to package (all by default)
@@ -190,6 +190,13 @@ else
     TRY_X86=no
 fi
 
+echo "$TOOLCHAINS" | tr ' ' '\n' | grep -q powerpc
+if [ $? = 0 ] ; then
+    TRY_PPC=yes
+else
+    TRY_PPC=no
+fi
+
 # first create the reference ndk directory from the git reference
 echo "Creating reference from source files"
 REFERENCE=$TMPDIR/reference && rm -rf $REFERENCE/* &&
@@ -306,7 +313,7 @@ for SYSTEM in $SYSTEMS; do
         fail_panic "Could not copy toolchain files from $PREBUILT_NDK"
 
         if [ -d "$DSTDIR/$STLPORT_SUBDIR" ] ; then
-            STLPORT_ABIS="armeabi armeabi-v7a x86"
+            STLPORT_ABIS="armeabi armeabi-v7a x86 ppc"
             cd $UNZIP_DIR/android-ndk-*
             for STL_ABI in $STLPORT_ABIS; do
                 copy_prebuilt "$STLPORT_SUBDIR/libs/$STL_ABI" "$STLPORT_SUBDIR/libs"
@@ -330,16 +337,25 @@ for SYSTEM in $SYSTEMS; do
         if [ "$TRY_X86" = "yes" ] ; then
             unpack_libsupcxx gnu-libsupc++-x86.tar.bz2
         fi
+        if [ "$TRY_PPC" = "yes" ] ; then
+            unpack_libsupcxx gnu-libsupc++-ppc.tar.bz2
+        fi
         unpack_prebuilt stlport-libs-armeabi.tar.bz2
         unpack_prebuilt stlport-libs-armeabi-v7a.tar.bz2
         if [ "$TRY_X86" = "yes" ] ; then
             unpack_prebuilt stlport-prebuilt-x86.tar.bz2
+        fi
+        if [ "$TRY_PPC" = "yes" ] ; then
+            unpack_prebuilt stlport-prebuilt-ppc.tar.bz2
         fi
         unpack_prebuilt gnu-libstdc++-headers.tar.bz2
         unpack_prebuilt gnu-libstdc++-libs-armeabi.tar.bz2
         unpack_prebuilt gnu-libstdc++-libs-armeabi-v7a.tar.bz2
         if [ "$TRY_X86" = "yes" ] ; then
             unpack_prebuilt gnu-libstdc++-libs-x86.tar.bz2
+        fi
+        if [ "$TRY_PPC" = "yes" ] ; then
+            unpack_prebuilt gnu-libstdc++-libs-ppc.tar.bz2
         fi
     fi
 

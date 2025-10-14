@@ -1,0 +1,253 @@
+From 4cbee79a2399cd54d5a6293c2ee57bb233147eaa Mon Sep 17 00:00:00 2001
+From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+Date: Thu, 12 Apr 2012 16:07:01 +0400
+Subject: [PATCH 3/4] Use .init_arrary/.fini_array sections if possible.
+
+2011-08-20  H.J. Lu  <hongjiu.lu@intel.com>
+
+	PR other/46770
+	* config.gcc (tm_file): Add initfini-array.h if
+	.init_arrary/.fini_array are supported.
+
+	* crtstuff.c: Don't generate .ctors nor .dtors sections if
+	USE_INITFINI_ARRAY is defined.
+
+	* output.h (default_elf_init_array_asm_out_constructor): New.
+	(default_elf_fini_array_asm_out_destructor): Likewise.
+	* varasm.c (elf_init_array_section): Likewise.
+	(elf_fini_array_section): Likewise.
+	(get_elf_initfini_array_priority_section): Likewise.
+	(default_elf_init_array_asm_out_constructor): Likewise.
+	(default_elf_fini_array_asm_out_destructor): Likewise.
+
+	* config/initfini-array.h: New.
+
+Signed-off-by: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+---
+ gcc-4.4.3/gcc/ChangeLog               |   19 +++++++++++
+ gcc-4.4.3/gcc/config.gcc              |    5 +++
+ gcc-4.4.3/gcc/config/initfini-array.h |   37 +++++++++++++++++++++
+ gcc-4.4.3/gcc/crtstuff.c              |   10 +++++-
+ gcc-4.4.3/gcc/output.h                |    2 +
+ gcc-4.4.3/gcc/varasm.c                |   58 +++++++++++++++++++++++++++++++++
+ 6 files changed, 130 insertions(+), 1 deletions(-)
+ create mode 100644 gcc-4.4.3/gcc/config/initfini-array.h
+
+diff --git a/gcc-4.4.3/gcc/ChangeLog b/gcc-4.4.3/gcc/ChangeLog
+index b212467..7f7ee03 100644
+--- a/gcc-4.4.3/gcc/ChangeLog
++++ b/gcc-4.4.3/gcc/ChangeLog
+@@ -1,3 +1,22 @@
++2011-08-20  H.J. Lu  <hongjiu.lu@intel.com>
++
++	PR other/46770
++	* config.gcc (tm_file): Add initfini-array.h if
++	.init_arrary/.fini_array are supported.
++
++	* crtstuff.c: Don't generate .ctors nor .dtors sections if
++	USE_INITFINI_ARRAY is defined.
++
++	* output.h (default_elf_init_array_asm_out_constructor): New.
++	(default_elf_fini_array_asm_out_destructor): Likewise.
++	* varasm.c (elf_init_array_section): Likewise.
++	(elf_fini_array_section): Likewise.
++	(get_elf_initfini_array_priority_section): Likewise.
++	(default_elf_init_array_asm_out_constructor): Likewise.
++	(default_elf_fini_array_asm_out_destructor): Likewise.
++
++	* config/initfini-array.h: New.
++
+ 2010-01-21  Release Manager
+ 
+ 	* GCC 4.4.3 released.
+diff --git a/gcc-4.4.3/gcc/config.gcc b/gcc-4.4.3/gcc/config.gcc
+index 1a5315b..f79f0c4 100644
+--- a/gcc-4.4.3/gcc/config.gcc
++++ b/gcc-4.4.3/gcc/config.gcc
+@@ -2634,6 +2634,11 @@ if test x$with_schedule = x; then
+ 	esac
+ fi
+ 
++# Support --enable-initfini-array.
++if test x$enable_initfini_array = xyes; then
++  tm_file="${tm_file} initfini-array.h"
++fi
++
+ # Validate and mark as valid any --with options supported
+ # by this target.  In order to use a particular --with option
+ # you must list it in supported_defaults; validating the value
+diff --git a/gcc-4.4.3/gcc/config/initfini-array.h b/gcc-4.4.3/gcc/config/initfini-array.h
+new file mode 100644
+index 0000000..8aaadf6
+--- /dev/null
++++ b/gcc-4.4.3/gcc/config/initfini-array.h
+@@ -0,0 +1,37 @@
++/* Definitions for ELF systems with .init_array/.fini_array section
++   support.
++   Copyright (C) 2011
++   Free Software Foundation, Inc.
++
++   This file is part of GCC.
++
++   GCC is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published
++   by the Free Software Foundation; either version 3, or (at your
++   option) any later version.
++
++   GCC is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
++   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
++   License for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with GCC; see the file COPYING3.  If not see
++   <http://www.gnu.org/licenses/>.  */
++
++#define USE_INITFINI_ARRAY
++
++#undef INIT_SECTION_ASM_OP
++#undef FINI_SECTION_ASM_OP
++
++#undef INIT_ARRAY_SECTION_ASM_OP
++#define INIT_ARRAY_SECTION_ASM_OP
++
++#undef FINI_ARRAY_SECTION_ASM_OP
++#define FINI_ARRAY_SECTION_ASM_OP
++
++/* Use .init_array/.fini_array section for constructors and destructors. */
++#undef TARGET_ASM_CONSTRUCTOR
++#define TARGET_ASM_CONSTRUCTOR default_elf_init_array_asm_out_constructor
++#undef TARGET_ASM_DESTRUCTOR
++#define TARGET_ASM_DESTRUCTOR default_elf_fini_array_asm_out_destructor
+diff --git a/gcc-4.4.3/gcc/crtstuff.c b/gcc-4.4.3/gcc/crtstuff.c
+index 884a2a5..d68b283 100644
+--- a/gcc-4.4.3/gcc/crtstuff.c
++++ b/gcc-4.4.3/gcc/crtstuff.c
+@@ -1,7 +1,7 @@
+ /* Specialized bits of code needed to support construction and
+    destruction of file-scope objects in C++ code.
+    Copyright (C) 1991, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001,
+-   2002, 2003, 2004, 2005, 2009 Free Software Foundation, Inc.
++   2002, 2003, 2004, 2005, 2009, 2011 Free Software Foundation, Inc.
+    Contributed by Ron Guilmette (rfg@monkeys.com).
+ 
+ This file is part of GCC.
+@@ -173,6 +173,9 @@ typedef void (*func_ptr) (void);
+    refer to only the __CTOR_END__ symbol in crtend.o and the __DTOR_LIST__
+    symbol in crtbegin.o, where they are defined.  */
+ 
++/* No need for .ctors/.dtors section if linker can place them in
++   .init_array/.fini_array section.  */
++#ifndef USE_INITFINI_ARRAY
+ /* The -1 is a flag to __do_global_[cd]tors indicating that this table
+    does not start with a count of elements.  */
+ #ifdef CTOR_LIST_BEGIN
+@@ -203,6 +206,7 @@ STATIC func_ptr __DTOR_LIST__[1]
+   __attribute__((section(".dtors"), aligned(sizeof(func_ptr))))
+   = { (func_ptr) (-1) };
+ #endif /* __DTOR_LIST__ alternatives */
++#endif /* USE_INITFINI_ARRAY */
+ 
+ #ifdef USE_EH_FRAME_REGISTRY
+ /* Stick a label at the beginning of the frame unwind info so we can register
+@@ -466,6 +470,9 @@ __do_global_ctors_1(void)
+ 
+ #elif defined(CRT_END) /* ! CRT_BEGIN */
+ 
++/* No need for .ctors/.dtors section if linker can place them in
++   .init_array/.fini_array section.  */
++#ifndef USE_INITFINI_ARRAY
+ /* Put a word containing zero at the end of each of our two lists of function
+    addresses.  Note that the words defined here go into the .ctors and .dtors
+    sections of the crtend.o file, and since that file is always linked in
+@@ -511,6 +518,7 @@ STATIC func_ptr __DTOR_END__[1]
+   __attribute__((unused, section(".dtors"), aligned(sizeof(func_ptr))))
+   = { (func_ptr) 0 };
+ #endif
++#endif /* USE_INITFINI_ARRAY */
+ 
+ #ifdef EH_FRAME_SECTION_NAME
+ /* Terminate the frame unwind info section with a 4byte 0 as a sentinel;
+diff --git a/gcc-4.4.3/gcc/output.h b/gcc-4.4.3/gcc/output.h
+index 79b628f..774ce3d 100644
+--- a/gcc-4.4.3/gcc/output.h
++++ b/gcc-4.4.3/gcc/output.h
+@@ -622,6 +622,8 @@ extern bool default_valid_pointer_mode (enum machine_mode);
+ 
+ extern void default_elf_asm_output_external (FILE *file, tree,
+ 					     const char *);
++extern void default_elf_init_array_asm_out_constructor (rtx, int);
++extern void default_elf_fini_array_asm_out_destructor (rtx, int);
+ extern int maybe_assemble_visibility (tree);
+ 
+ extern int default_address_cost (rtx, bool);
+diff --git a/gcc-4.4.3/gcc/varasm.c b/gcc-4.4.3/gcc/varasm.c
+index 670c887..cee30e8 100644
+--- a/gcc-4.4.3/gcc/varasm.c
++++ b/gcc-4.4.3/gcc/varasm.c
+@@ -6887,4 +6887,62 @@ default_elf_asm_output_external (FILE *file ATTRIBUTE_UNUSED,
+     maybe_assemble_visibility (decl);
+ }
+ 
++static GTY(()) section *elf_init_array_section;
++static GTY(()) section *elf_fini_array_section;
++
++static section *
++get_elf_initfini_array_priority_section (int priority,
++					 bool constructor_p)
++{
++  section *sec;
++  if (priority != DEFAULT_INIT_PRIORITY)
++    {
++      char buf[18];
++      sprintf (buf, "%s.%.5u", 
++	       constructor_p ? ".init_array" : ".fini_array",
++	       priority);
++      sec = get_section (buf, SECTION_WRITE, NULL_TREE);
++    }
++  else
++    {
++      if (constructor_p)
++	{
++	  if (elf_init_array_section == NULL)
++	    elf_init_array_section
++	      = get_unnamed_section (0, output_section_asm_op,
++				     "\t.section\t.init_array");
++	  sec = elf_init_array_section;
++	}
++      else
++	{
++	  if (elf_fini_array_section == NULL)
++	    elf_fini_array_section
++	      = get_unnamed_section (0, output_section_asm_op,
++				     "\t.section\t.fini_array");
++	  sec = elf_fini_array_section;
++	}
++    }
++  return sec;
++}
++
++/* Use .init_array section for constructors. */
++
++void
++default_elf_init_array_asm_out_constructor (rtx symbol, int priority)
++{
++  section *sec = get_elf_initfini_array_priority_section (priority,
++							  true);
++  assemble_addr_to_section (symbol, sec);
++}
++
++/* Use .fini_array section for destructors. */
++
++void
++default_elf_fini_array_asm_out_destructor (rtx symbol, int priority)
++{
++  section *sec = get_elf_initfini_array_priority_section (priority,
++							  false);
++  assemble_addr_to_section (symbol, sec);
++}
++
+ #include "gt-varasm.h"
+-- 
+1.7.9.1
+

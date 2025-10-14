@@ -23,6 +23,7 @@
 #include <sys/types.h>
 #include <sys/param.h>
 #include <stdint.h>
+#include <endian.h>
 
 /* IEEE floats consist of: sign bit, exponent field, significand field
     single:  31 = sign bit, 30..23 = exponent (8 bits), 22..0 = significand (23 bits)

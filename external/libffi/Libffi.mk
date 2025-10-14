@@ -34,6 +34,10 @@ ifeq ($(ffi_os)-$(ffi_arch),linux-sh)
   LOCAL_SRC_FILES := src/sh/ffi.c src/sh/sysv.S
 endif
 
+ifeq ($(ffi_os)-$(ffi_arch),linux-powerpc)
+  LOCAL_SRC_FILES := src/powerpc/ffi.c src/powerpc/sysv.S src/powerpc/ppc_closure.S
+endif
+
 ifeq ($(ffi_os)-$(ffi_arch),darwin-x86)
   LOCAL_SRC_FILES := src/x86/ffi.c src/x86/darwin.S
 endif

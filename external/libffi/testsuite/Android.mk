@@ -20,9 +20,7 @@ include $(CLEAR_VARS)
 FFI_SINGLE_TEST_FILE := libffi.call/struct5.c
 
 # We only build ffi at all for non-arm, non-x86 targets.
-ifneq ($(TARGET_ARCH),arm)
-    ifneq ($(TARGET_ARCH),x86)
-
+ifeq ($(filter arm powerpc x86,$(TARGET_ARCH)),)
         include $(CLEAR_VARS)
 
         LOCAL_SRC_FILES := $(FFI_SINGLE_TEST_FILE)
@@ -33,6 +31,4 @@ ifneq ($(TARGET_ARCH),arm)
         LOCAL_MODULE_TAGS := tests
 
         include $(BUILD_EXECUTABLE)
-
-    endif
 endif

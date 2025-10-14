@@ -113,6 +113,7 @@
 #ifndef _MSC_VER
 #include <sys/param.h>
 #endif  // !_MSC_VER
+#include <endian.h>
 #include <google/protobuf/stubs/common.h>
 #include <google/protobuf/stubs/common.h>          // for GOOGLE_PREDICT_TRUE macro
 

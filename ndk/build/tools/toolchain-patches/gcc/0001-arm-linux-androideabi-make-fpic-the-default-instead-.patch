@@ -30,7 +30,7 @@ index a43bab5..ae4b26f 100644
 +  "%{!fno-pic:%{!fno-PIC:%{!fpic:%{!fPIC: -fpic}}}}"
  
  #define ANDROID_CC1PLUS_SPEC						\
-   "%{!fexceptions:%{!fno-exceptions: -fno-exceptions}} "		\
+   "%{!fexceptions:%{!fno-exceptions: -fexceptions}} "		\
 -- 
 1.7.3.1
 

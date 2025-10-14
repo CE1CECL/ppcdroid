@@ -1,0 +1,26 @@
+From c1dccf13b26f3c9955900893be3b1adb9a0e7c20 Mon Sep 17 00:00:00 2001
+From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+Date: Thu, 12 Apr 2012 15:58:27 +0400
+Subject: [PATCH] Fix the segfault at ppc_elf_gc_sweep_hook
+
+Signed-off-by: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+---
+ binutils-2.19/bfd/elf32-ppc.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/binutils-2.19/bfd/elf32-ppc.c b/binutils-2.19/bfd/elf32-ppc.c
+index 1d9cabd..552d022 100644
+--- a/binutils-2.19/bfd/elf32-ppc.c
++++ b/binutils-2.19/bfd/elf32-ppc.c
+@@ -4286,7 +4286,7 @@ ppc_elf_gc_sweep_hook (bfd *abfd,
+ 	    {
+ 	      bfd_vma addend = r_type == R_PPC_PLTREL24 ? rel->r_addend : 0;
+ 	      struct plt_entry *ent = find_plt_ent (h, got2, addend);
+-	      if (ent->plt.refcount > 0)
++	      if (ent != NULL && ent->plt.refcount > 0)
+ 		ent->plt.refcount -= 1;
+ 	    }
+ 	  break;
+-- 
+1.7.9.1
+

@@ -21,6 +21,7 @@
 #include <sys/types.h>
 #include <assert.h>
 #include <string.h>
+#include <endian.h>
 
 #include "sha1.h"
 

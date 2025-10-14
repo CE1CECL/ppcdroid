@@ -24,9 +24,7 @@ LOCAL_PATH:= $(call my-dir)
 #
 
 # We only build ffi at all for non-arm, non-x86 targets.
-ifneq ($(TARGET_ARCH),arm)
-    ifneq ($(TARGET_ARCH),x86)
-
+ifeq ($(filter arm powerpc x86,$(TARGET_ARCH)),)
        include $(CLEAR_VARS)
 
        ffi_arch := $(TARGET_ARCH)
@@ -36,10 +34,9 @@ ifneq ($(TARGET_ARCH),arm)
        include $(LOCAL_PATH)/Libffi.mk
 
        LOCAL_MODULE := libffi
+       LOCAL_MODULE_TAGS := optional
 
        include $(BUILD_SHARED_LIBRARY)
-
-    endif
 endif
 
 # Also include the rules for the test suite.

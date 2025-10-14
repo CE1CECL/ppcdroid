@@ -40,6 +40,8 @@
 #include "ifc_utils.h"
 #include "packet.h"
 
+#include <endian.h>
+
 #define VERBOSE 2
 
 static int verbose = 1;
@@ -88,12 +90,12 @@ int fatal(const char *reason)
 const char *ipaddr(uint32_t addr)
 {
     static char buf[32];
-
+    addr = ntohl(addr);
     sprintf(buf,"%d.%d.%d.%d",
-            addr & 255,
-            ((addr >> 8) & 255),
+            (addr >> 24),
             ((addr >> 16) & 255),
-            (addr >> 24));
+            ((addr >> 8) & 255),
+	    addr & 255);
     return buf;
 }
 
@@ -226,8 +228,14 @@ int decode_dhcp_msg(dhcp_msg *msg, int len, dhcp_info *info)
             if (optlen >= 4) memcpy(&info->gateway, x, 4);
             break;
         case OPT_DNS:
-            if (optlen >= 4) memcpy(&info->dns1, x + 0, 4);
-            if (optlen >= 8) memcpy(&info->dns2, x + 4, 4);
+            if (optlen >= 4) {
+                memcpy(&info->dns1, x + 0, 4);
+                info->dns1 = letoh32(info->dns1);
+            }
+            if (optlen >= 8) {
+                memcpy(&info->dns2, x + 4, 4);
+                info->dns2 = letoh32(info->dns2);
+            }
             break;
         case OPT_LEASE_TIME:
             if (optlen >= 4) {

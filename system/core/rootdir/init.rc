@@ -99,7 +99,7 @@ on fs
 
 on post-fs
     # once everything is setup, no need to modify /
-    mount rootfs rootfs / ro remount
+    #mount rootfs rootfs / ro remount
 
     # We chown/chmod /data again so because mount is run as root + defaults
     chown system system /data
@@ -219,6 +219,12 @@ on boot
     write /proc/sys/vm/min_free_order_shift 4
     write /sys/module/lowmemorykiller/parameters/minfree 2048,3072,4096,6144,7168,8192
 
+    #userspace configuration for adb
+    write /sys/class/android_usb/android0/enable 0
+    write /sys/class/android_usb/android0/functions adb
+    write /sys/class/android_usb/android0/enable 1
+
+
     # Set init its forked children's oom_adj.
     write /proc/1/oom_adj -16
 
@@ -283,7 +289,7 @@ service ueventd /sbin/ueventd
 service console /system/bin/sh
     console
     disabled
-    user shell
+    user root
     group log
 
 on property:ro.secure=0

@@ -1,0 +1,92 @@
+From 1495024a32b0fe1b28b10da0938d7402573fd344 Mon Sep 17 00:00:00 2001
+From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+Date: Tue, 10 Apr 2012 15:47:37 +0400
+Subject: [PATCH] Add support for powerpc-android-linux- toolchains
+
+Signed-off-by: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+---
+ Makefile.in  |   22 ++++++++++++++++++++++
+ configure    |    4 ++++
+ configure.ac |    4 ++++
+ 3 files changed, 30 insertions(+), 0 deletions(-)
+
+diff --git a/Makefile.in b/Makefile.in
+index c8b704c..f43d393 100644
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -277,6 +277,28 @@ GCC_CONFIG_ARGS += $(GCC_CONFIG_LIBSTDCXX_V3) --disable-libssp \
+ 	--disable-libstdc__-v3 --disable-sjlj-exceptions --disable-shared \
+ 	--disable-tls
+ CFLAGS_FOR_TARGET += -DTARGET_POSIX_IO -fno-short-enums
++ifeq ($(target_cpu),powerpc)
++# Options brought in from core/combo/* for PowerPC
++# -finline-functions
++# -finline-limit=300
++# -fno-inline-functions-called-once
++CFLAGS_FOR_TARGET += \
++	-Wa,--noexecstack -m32  -fPIC \
++	-W -Wall -Wno-address -Wno-format-security -Wno-non-virtual-dtor -Wno-return-type \
++	-Wno-sequence-point -Winit-self -Wno-multichar -Wno-unused -Wpointer-arith -Wstrict-aliasing=2 \
++	-ffunction-sections -fmessage-length=0  \
++	-fstrict-aliasing -funswitch-loops \
++	-mbionic -mregnames -fomit-frame-pointer \
++	-fstrict-aliasing -fdata-sections -funwind-tables \
++	-fgcse-after-reload -frerun-cse-after-loop -frename-registers
++
++LDFLAGS_FOR_TARGET += \
++	-m32 -fPIC \
++	-Wl,-z,noexecstack -Wl,--gc-sections \
++	-W -Wall \
++	-Wno-format-security -Wl,--no-undefined
++endif
++
+ # ARM specific options.
+ ifeq ($(target_cpu),arm)
+ GCC_CONFIG_ARGS += --with-float=soft --with-fpu=vfp --with-arch=armv5te \
+diff --git a/configure b/configure
+index 37db9be..8fdfaf1 100755
+--- a/configure
++++ b/configure
+@@ -1838,6 +1838,7 @@ test -n "$target_alias" &&
+ # 2. arm-eabi (to be phased out.)
+ # 3. arm-newlib-eabi (for gcc testing)
+ # 4.i[3456]86-*-linux-gnu, x86-*-linux-gnu (for x86 targets)
++# 5. powerpc-android-linux
+ 
+ GDB_TARGET=$target
+ case $target in
+@@ -1851,6 +1852,9 @@ case $target in
+   i[3456]86-*-linux-gnu | x86_64-*-linux-gnu)
+     BUILD_ANDROID_GCC=yes
+     ;;
++  powerpc-android-linux-gnu)
++    BUILD_ANDROID_GCC=yes
++    ;;
+   *)
+     { { echo "$as_me:$LINENO: error: Unsupported target $target." >&5
+ echo "$as_me: error: Unsupported target $target." >&2;}
+diff --git a/configure.ac b/configure.ac
+index 4180f29..7ca1ce2 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -23,6 +23,7 @@ AC_CANONICAL_SYSTEM
+ # 2. arm-eabi (for Android kernel)
+ # 3. arm-newlib-eabi (for gcc testing)
+ # 4.i[3456]86-*-linux-gnu, x86-*-linux-gnu (for x86 targets)
++# 5. powerpc-android-linux
+ 
+ GDB_TARGET=$target
+ case $target in
+@@ -36,6 +37,9 @@ case $target in
+   i[[3456]]86-*-linux-gnu | x86_64-*-linux-gnu)
+     BUILD_ANDROID_GCC=yes
+     ;;
++  powerpc-android-linux-gnu)
++    BUILD_ANDROID_GCC=yes
++    ;;
+   *)
+     AC_MSG_ERROR(Unsupported target $target.);
+ esac
+-- 
+1.7.9.1
+

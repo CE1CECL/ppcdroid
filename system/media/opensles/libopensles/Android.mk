@@ -123,6 +123,9 @@ LOCAL_C_INCLUDES += \
 
 LOCAL_CFLAGS += -x c++ -Wno-multichar -Wno-invalid-offsetof
 # Needed when building for x86
+ifeq ($(TARGET_ARCH),powerpc)
+LOCAL_CFLAGS += -fno-rtti -fno-exceptions
+endif
 ifeq ($(TARGET_ARCH),x86)
 LOCAL_CFLAGS += -fno-rtti -fno-exceptions
 endif
