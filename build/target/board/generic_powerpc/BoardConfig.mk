@@ -6,14 +6,12 @@
 # The generic product target doesn't have any hardware-specific pieces.
 TARGET_NO_BOOTLOADER := true
 TARGET_NO_KERNEL := true
-TARGET_CPU_ABI := ppc440e
+TARGET_CPU_ABI := ppc750
 TARGET_ARCH := powerpc
-TARGET_ARCH_VARIANT := ppc440e
-TARGET_PRELINK_MODULE := false
+TARGET_ARCH_VARIANT := ppc750
 
-# The PowerPC emulator (qemu) uses the Goldfish devices
-HAVE_HTC_AUDIO_DRIVER := true
-BOARD_USES_GENERIC_AUDIO := true
+BOARD_USES_GENERIC_AUDIO := false
+TARGET_PRELINK_MODULE := false
 
 # no hardware camera
 USE_CAMERA_STUB := true
@@ -26,5 +24,6 @@ TARGET_SHELL := mksh
 ifeq ($(HOST_OS),linux)
 WITH_DEXPREOPT := true
 endif
+
 # Build OpenGLES emulation host and guest libraries
-BUILD_EMULATOR_OPENGL := true
+BUILD_EMULATOR_OPENGL := false
