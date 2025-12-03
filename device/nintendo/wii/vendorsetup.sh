@@ -1,0 +1,3 @@
+add_lunch_combo full_wii-user
+add_lunch_combo full_wii-userdebug
+add_lunch_combo full_wii-eng

@@ -1,2 +1,1 @@
-arch_variant_cflags := \
-	-mcpu=750
+arch_variant_cflags := -mcpu=750
