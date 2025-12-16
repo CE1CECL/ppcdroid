@@ -23,7 +23,7 @@ TARGET_SHELL := mksh
 # Enable dex-preoptimization to speed up the first boot sequence
 # of an SDK AVD. Note that this operation only works on Linux for now
 ifeq ($(HOST_OS),linux)
-WITH_DEXPREOPT := true
+WITH_DEXPREOPT := false
 endif
 
 # Build OpenGLES emulation host and guest libraries
