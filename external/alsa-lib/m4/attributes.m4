@@ -114,7 +114,7 @@ AC_DEFUN([CC_NOUNDEFINED], [
         dnl First of all check for the --no-undefined variant of GNU ld. This allows
         dnl for a much more readable commandline, so that people can understand what
         dnl it does without going to look for what the heck -z defs does.
-   	for possible_flags in "-Wl,--no-undefined" "-Wl,-z,defs"; do
+   	for possible_flags in "-Wl,--allow-shlib-undefined" "-Wl,-z,defs"; do
           CC_CHECK_LDFLAGS([$possible_flags], [LDFLAGS_NOUNDEFINED="$possible_flags"])
 	  break
         done

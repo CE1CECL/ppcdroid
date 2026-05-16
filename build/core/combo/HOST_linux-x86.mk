@@ -63,4 +63,4 @@ HOST_GLOBAL_CFLAGS += \
 # Disable new longjmp in glibc 2.11 and later. See bug 2967937.
 HOST_GLOBAL_CFLAGS += -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0
 
-HOST_NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
+HOST_NO_UNDEFINED_LDFLAGS := -Wl,--allow-shlib-undefined

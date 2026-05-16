@@ -54,7 +54,7 @@ TARGET_LIBGCC := \
 	$(shell $(TARGET_CC) -m32 -print-file-name=libgcc.a)
 endif
 
-TARGET_NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
+TARGET_NO_UNDEFINED_LDFLAGS := -Wl,--allow-shlib-undefined
 
 libc_root := bionic/libc
 libm_root := bionic/libm

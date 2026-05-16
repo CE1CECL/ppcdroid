@@ -87,12 +87,12 @@ CCTCFLAGS:=-msoft-float -mthumb-interwork -fno-exceptions -ffunction-sections -f
 #-fwide-exec-charset=charset=UTF-32 
 
 # for target exe
-TELDFLAGS:=-nostdlib -Bdynamic -Wl,-T,$(TCROOTPATH)/build/core/armelf.x -Wl,-dynamic-linker,/system/bin/linker -Wl,--gc-sections -Wl,-z,nocopyreloc -Wl,--no-undefined -Wl,-rpath-link=$(CCTLIB) -L$(CCTLIB) 
+TELDFLAGS:=-nostdlib -Bdynamic -Wl,-T,$(TCROOTPATH)/build/core/armelf.x -Wl,-dynamic-linker,/system/bin/linker -Wl,--gc-sections -Wl,-z,nocopyreloc -Wl,--allow-shlib-undefined -Wl,-rpath-link=$(CCTLIB) -L$(CCTLIB) 
 
 VOTEDEPS:=$(CCTLIB)/crtbegin_dynamic.o $(CCTLIB)/crtend_android.o $(TCPATH)/lib/gcc/arm-eabi/$(GCCVER)/interwork/libgcc.a -lc -lm
 
 # for target lib
-TLLDFLAGS:=-nostdlib -Wl,-T,$(TCROOTPATH)/build/core/armelf.xsc -Wl,--gc-sections -Wl,-shared,-Bsymbolic -L$(CCTLIB) -Wl,--no-whole-archive -Wl,--no-undefined $(TCPATH)/lib/gcc/arm-eabi/$(GCCVER)/interwork/libgcc.a 
+TLLDFLAGS:=-nostdlib -Wl,-T,$(TCROOTPATH)/build/core/armelf.xsc -Wl,--gc-sections -Wl,-shared,-Bsymbolic -L$(CCTLIB) -Wl,--no-whole-archive -Wl,--allow-shlib-undefined $(TCPATH)/lib/gcc/arm-eabi/$(GCCVER)/interwork/libgcc.a 
 
 VOTLDEPS:=-lm -lc
 

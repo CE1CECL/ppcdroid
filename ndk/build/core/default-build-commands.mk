@@ -6,7 +6,7 @@
 
 # These flags are used to ensure that a binary doesn't reference undefined
 # flags.
-TARGET_NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
+TARGET_NO_UNDEFINED_LDFLAGS := -Wl,--allow-shlib-undefined
 
 # These flags are used to enfore the NX (no execute) security feature in the
 # generated machine code. This adds a special section to the generated shared

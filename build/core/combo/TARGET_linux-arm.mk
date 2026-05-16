@@ -55,7 +55,7 @@ TARGET_LD := $(TARGET_TOOLS_PREFIX)ld$(HOST_EXECUTABLE_SUFFIX)
 TARGET_STRIP := $(HOST_OUT_EXECUTABLES)/soslim$(HOST_EXECUTABLE_SUFFIX)
 TARGET_STRIP_COMMAND = $(TARGET_STRIP) --strip --shady --quiet $< --outfile $@
 
-TARGET_NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
+TARGET_NO_UNDEFINED_LDFLAGS := -Wl,--allow-shlib-undefined
 
 TARGET_arm_CFLAGS :=    -O2 \
                         -fomit-frame-pointer \

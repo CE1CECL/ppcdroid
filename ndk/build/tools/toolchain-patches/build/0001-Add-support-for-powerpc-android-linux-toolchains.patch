@@ -37,7 +37,7 @@ index c8b704c..f43d393 100644
 +	-m32 -fPIC \
 +	-Wl,-z,noexecstack -Wl,--gc-sections \
 +	-W -Wall \
-+	-Wno-format-security -Wl,--no-undefined
++	-Wno-format-security -Wl,--allow-shlib-undefined
 +endif
 +
  # ARM specific options.

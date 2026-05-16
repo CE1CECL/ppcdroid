@@ -31,7 +31,7 @@ TARGET_LD := $(TARGET_TOOLS_PREFIX)ld$(HOST_EXECUTABLE_SUFFIX)
 TARGET_STRIP := $(TARGET_TOOLS_PREFIX)strip$(HOST_EXECUTABLE_SUFFIX)
 TARGET_STRIP_COMMAND = $(TARGET_STRIP) --strip-debug $< -o $@
 
-TARGET_NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
+TARGET_NO_UNDEFINED_LDFLAGS := -Wl,--allow-shlib-undefined
 
 TARGET_sh_release_CFLAGS :=     -O2 \
                                 -fomit-frame-pointer \
