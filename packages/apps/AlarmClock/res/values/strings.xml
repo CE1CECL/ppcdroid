@@ -53,7 +53,7 @@
     <string name="alarm_repeat">Repeat</string>
 
     <!-- Setting labels on Set alarm screen: Select alarm ringtone  -->
-    <string name="alert">Ringtone</string>
+    <string name="alert">Alert sound</string>
 
     <!-- Setting labels on Set alarm screen: Set time  -->
     <string name="time">Time</string>

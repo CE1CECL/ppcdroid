@@ -102,6 +102,11 @@ public class SdkStatsService {
 
 
     private static PreferenceStore sPrefStore;
+    
+    public static void ping(final String app, final String version) {
+		System.err.println("Calling ping() wihtout third argument is deprecated!");
+		ping ( app, version, null );
+    }
 
     /**
      * Send a "ping" to the Google toolbar server, if enough time has
@@ -127,7 +132,9 @@ public class SdkStatsService {
                 prefs.setValue(PING_ID, new Random().nextLong());
 
                 // Also give them a chance to opt out.
-                prefs.setValue(PING_OPT_IN, getUserPermission(display));
+		//NS: Do not show any dialog and by default disable statistic gathering
+                //prefs.setValue(PING_OPT_IN, getUserPermission(display));
+                prefs.setValue(PING_OPT_IN, false);
                 try {
                     prefs.save();
                 }
@@ -234,8 +241,14 @@ public class SdkStatsService {
      * @param id of the local installation
      * @throws IOException if the ping failed
      */
-    @SuppressWarnings("deprecation")
     private static void actuallySendPing(String app, String version, long id)
+        throws IOException {
+	/*NS: Actually do nothing...*/
+	return;
+    }
+
+    @SuppressWarnings("deprecation")
+    private static void actuallyActuallySendPing(String app, String version, long id)
         throws IOException {
         // Detect and report the host OS.
         String os = System.getProperty("os.name");          // $NON-NLS-1$

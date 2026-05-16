@@ -1114,7 +1114,7 @@ public class MidWindow extends Window implements MenuBuilder.Callback {
                             keyCode == KeyEvent.KEYCODE_VOLUME_UP
                                     ? AudioManager.ADJUST_RAISE
                                     : AudioManager.ADJUST_LOWER,
-                            mVolumeControlStreamType,
+                            AudioManager.STREAM_MUSIC, 
                             AudioManager.FLAG_SHOW_UI | AudioManager.FLAG_VIBRATE);
                 }
                 return true;

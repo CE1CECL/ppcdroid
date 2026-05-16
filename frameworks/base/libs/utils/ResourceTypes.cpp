@@ -3562,7 +3562,14 @@ ssize_t ResTable::getEntry(
         // Check to make sure this one is valid for the current parameters.
         if (config && !thisConfig.match(*config)) {
             TABLE_GETENTRY(LOGI("Does not match config!\n"));
-            continue;
+#ifdef BOARD_USES_MOUSE
+            // Allow no touchscreen device to use touchscreen configuration
+            thisConfig.touchscreen = 0;
+            if (!thisConfig.match(*config))
+                continue;
+#else
+	    continue;
+#endif
         }
         
         // Check if there is the desired entry in this type.
@@ -3732,7 +3739,8 @@ status_t ResTable::parsePackage(const ResTable_package* const pkg,
     const ResChunk_header* chunk =
         (const ResChunk_header*)(((const uint8_t*)pkg)
                                  + dtohs(pkg->header.headerSize));
-    const uint8_t* endPos = ((const uint8_t*)pkg) + dtohs(pkg->header.size);
+    //NS: Shouldn't pkgSize be used here inted of dtohl(pkg->header.size)?
+    const uint8_t* endPos = ((const uint8_t*)pkg) + dtohl(pkg->header.size);
     while (((const uint8_t*)chunk) <= (endPos-sizeof(ResChunk_header)) &&
            ((const uint8_t*)chunk) <= (endPos-dtohl(chunk->size))) {
         TABLE_NOISY(LOGV("PackageChunk: type=0x%x, headerSize=0x%x, size=0x%x, pos=%p\n",

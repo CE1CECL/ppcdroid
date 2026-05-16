@@ -58,6 +58,7 @@ import android.content.pm.PackageManager;
 import android.content.res.CompatibilityInfo;
 import android.content.res.Configuration;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.Region;
@@ -108,6 +109,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.Transformation;
 
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileDescriptor;
@@ -122,6 +124,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+
+import android.graphics.Canvas;
+import android.graphics.Path;
 
 /** {@hide} */
 public class WindowManagerService extends IWindowManager.Stub implements Watchdog.Monitor {
@@ -336,6 +341,13 @@ public class WindowManagerService extends IWindowManager.Stub implements Watchdo
     private DimAnimator mDimAnimator = null;
     Surface mBlurSurface;
     boolean mBlurShown;
+
+    Surface mMouseSurface;
+    int mShowMouse = 0;
+    int mMlx;
+    int mMly;
+    int mMlw;
+    int mMlh;
 
     int mTransactionSequence = 0;
 
@@ -4067,7 +4079,7 @@ public class WindowManagerService extends IWindowManager.Stub implements Watchdo
         // dispatch the event.
         try {
             if (DEBUG_INPUT || DEBUG_FOCUS || WindowManagerPolicy.WATCH_POINTER) {
-                Log.v(TAG, "Delivering pointer " + qev + " to " + target);
+                Log.v(TAG, "Delivering pointer " + qev + " Ev " + ev + " to " + target);
             }
             target.mClient.dispatchPointer(ev, eventTime);
             return INJECT_SUCCEEDED;
@@ -4457,6 +4469,9 @@ public class WindowManagerService extends IWindowManager.Stub implements Watchdo
             long keyDispatchingTimeout = 5 * 1000;
             long waitedFor = 0;
 
+            if ("silverbox".equals(
+                            SystemProperties.get("ro.product.board", "")))
+                keyDispatchingTimeout = 15 * 1000;
             while (true) {
                 // Figure out which window we care about.  It is either the
                 // last window we are waiting to have process the event or,
@@ -4758,7 +4773,7 @@ public class WindowManagerService extends IWindowManager.Stub implements Watchdo
                         final Rect tmpRect = mTempRect;
                         for (int i=N-1; i>=0; i--) {
                             WindowState child = (WindowState)windows.get(i);
-                            //Log.i(TAG, "Checking dispatch to: " + child);
+                            Log.i(TAG, "Checking dispatch to: " + child);
                             final int flags = child.mAttrs.flags;
                             if ((flags & WindowManager.LayoutParams.FLAG_SYSTEM_ERROR) != 0) {
                                 if (topErrWindow == null) {
@@ -4766,11 +4781,11 @@ public class WindowManagerService extends IWindowManager.Stub implements Watchdo
                                 }
                             }
                             if (!child.isVisibleLw()) {
-                                //Log.i(TAG, "Not visible!");
+                                Log.i(TAG, "Not visible!");
                                 continue;
                             }
                             if ((flags & WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE) != 0) {
-                                //Log.i(TAG, "Not touchable!");
+                                Log.i(TAG, "Not touchable!");
                                 if ((flags & WindowManager.LayoutParams
                                         .FLAG_WATCH_OUTSIDE_TOUCH) != 0) {
                                     child.mNextOutsideTouch = mOutsideTouchTargets;
@@ -4953,7 +4968,7 @@ public class WindowManagerService extends IWindowManager.Stub implements Watchdo
                 if (qev != null) {
                     MotionEvent res = (MotionEvent)qev.event;
                     if (DEBUG_INPUT) Log.v(TAG,
-                            "Returning pending motion: " + res);
+                            "Returning pending motion: " + res + "q: " + qev);
                     mQueue.recycleEvent(qev);
                     if (win != null && returnWhat == RETURN_PENDING_POINTER) {
                         res.offsetLocation(-win.mFrame.left, -win.mFrame.top);
@@ -5120,6 +5135,9 @@ public class WindowManagerService extends IWindowManager.Stub implements Watchdo
                 return true;
             }
 
+	    String hwNoPMStr = SystemProperties.get("hw.nopm");
+	    boolean hwNoPM = Boolean.parseBoolean(hwNoPMStr);
+
             switch (event.type) {
                 case RawInputEvent.EV_KEY: {
                     // XXX begin hack
@@ -5171,12 +5189,15 @@ public class WindowManagerService extends IWindowManager.Stub implements Watchdo
                 }
 
                 case RawInputEvent.EV_REL: {
+		    if (hwNoPM)
+			return true;
                     boolean screenIsOff = !mPowerManager.screenIsOn();
                     boolean screenIsDim = !mPowerManager.screenIsBright();
                     if (screenIsOff) {
                         if (!mPolicy.isWakeRelMovementTq(event.deviceId,
                                 device.classes, event)) {
-                            //Log.i(TAG, "dropping because screenIsOff and !isWakeKey");
+                            if (DEBUG_INPUT)
+                                Log.i(TAG, "dropping because screenIsOff and !isWakeKey");
                             return false;
                         }
                         event.flags |= WindowManagerPolicy.FLAG_WOKE_HERE;
@@ -5188,6 +5209,8 @@ public class WindowManagerService extends IWindowManager.Stub implements Watchdo
                 }
 
                 case RawInputEvent.EV_ABS: {
+		    if (hwNoPM)
+			return true;
                     boolean screenIsOff = !mPowerManager.screenIsOn();
                     boolean screenIsDim = !mPowerManager.screenIsBright();
                     if (screenIsOff) {
@@ -5310,7 +5333,8 @@ public class WindowManagerService extends IWindowManager.Stub implements Watchdo
                         if (ev.classType == RawInputEvent.CLASS_TOUCHSCREEN) {
                             eventType = eventType((MotionEvent)ev.event);
                         } else if (ev.classType == RawInputEvent.CLASS_KEYBOARD ||
-                                    ev.classType == RawInputEvent.CLASS_TRACKBALL) {
+                                   ev.classType == RawInputEvent.CLASS_TRACKBALL ||
+                                   ev.classType == RawInputEvent.CLASS_MOUSE) {
                             eventType = LocalPowerManager.BUTTON_EVENT;
                         } else {
                             eventType = LocalPowerManager.OTHER_EVENT;
@@ -5353,6 +5377,48 @@ public class WindowManagerService extends IWindowManager.Stub implements Watchdo
                                 break;
                             case RawInputEvent.CLASS_TOUCHSCREEN:
                                 //Log.i(TAG, "Read next event " + ev);
+                                dispatchPointer(ev, (MotionEvent)ev.event, 0, 0);
+                                break;
+                            case RawInputEvent.CLASS_MOUSE:
+                                MotionEvent mmev = (MotionEvent)ev.event;
+                                int mcx = (int)mmev.getX();
+                                int mcy = (int)mmev.getY();
+
+                                if (mMouseSurface != null && (mMlx != mcx || mMly != mcy)) {
+                                    long origId = Binder.clearCallingIdentity();
+                                    try {
+                                        synchronized (mWindowMap) {
+                                            if (DEBUG_INPUT)
+                                                Log.i(TAG, "Open transaction for the mouse surface");
+                                            WindowState top =
+                                                (WindowState)mWindows.get(mWindows.size() - 1);
+                                            if (top != null && top.mSurface != null) {
+                                                Surface.openTransaction();
+                                                try {
+                                                    if (DEBUG_INPUT)
+                                                        Log.i(TAG, "Move surf, x: " +
+                                                              Integer.toString(mcx) + " y:"
+                                                              + Integer.toString(mcy));
+
+                                                    mMouseSurface.setPosition(mcx,mcy);
+                                                    mMouseSurface.setLayer(top.mAnimLayer + 1);
+                                                    if (mShowMouse != 1) {
+                                                        mMouseSurface.show();
+                                                        mShowMouse = 1;
+                                                    }
+                                                    mMlx = mcx;
+                                                    mMly = mcy;
+                                                } catch ( RuntimeException e) {
+                                                    Log.w(TAG, "Failure showing mouse surface",e);
+                                                } finally {
+                                                    Surface.closeTransaction();
+                                                }
+                                            }
+                                        }
+                                    } finally {
+                                        Binder.restoreCallingIdentity(origId);
+                                    }
+                                }
                                 dispatchPointer(ev, (MotionEvent)ev.event, 0, 0);
                                 break;
                             case RawInputEvent.CLASS_TRACKBALL:
@@ -7960,6 +8026,62 @@ public class WindowManagerService extends IWindowManager.Stub implements Watchdo
 
         if (mFxSession == null) {
             mFxSession = new SurfaceSession();
+        }
+
+        if (mMouseSurface == null) {
+            int mMx, mMy, mMw, mMh;
+            Canvas mCanvas;
+            Path mPath = new Path();
+
+            if (DEBUG_INPUT)
+                Log.i(TAG, "Create Mouse Surface");
+
+            mMw = 12;
+            mMh = 20;
+            mMx = (mDisplay.getWidth() - mMw) / 2;
+            mMy = (mDisplay.getHeight() - mMh) / 2;
+
+            try {
+
+                /*
+                 *First Mouse event, create Surface
+                 */
+
+                mMouseSurface =
+                    new Surface(mFxSession,
+                                0, -1, mMw, mMh,
+                                PixelFormat.TRANSPARENT,
+                                Surface.FX_SURFACE_NORMAL);
+                mCanvas = mMouseSurface.lockCanvas(null);
+                Paint tPaint = new Paint();
+                tPaint.setStyle(Paint.Style.STROKE);
+                tPaint.setStrokeWidth(2);
+                tPaint.setColor(0xffffffff);
+                mPath.moveTo(0.0f, 0.0f);
+                mPath.lineTo(12.0f, 12.0f);
+                mPath.lineTo(7.0f, 12.0f);
+                mPath.lineTo(11.0f, 20.0f);
+                mPath.lineTo(8.0f, 21.0f);
+                mPath.lineTo(4.0f, 13.0f);
+                mPath.lineTo(0.0f, 17.0f);
+                mPath.close();
+
+                mCanvas.clipPath(mPath);
+                mCanvas.drawColor(0xff000000);
+                mCanvas.drawPath(mPath, tPaint);
+
+                mMouseSurface.unlockCanvasAndPost(mCanvas);
+                mMouseSurface.openTransaction();
+                mMouseSurface.setSize(mMw,mMh);
+                mMouseSurface.closeTransaction();
+
+            } catch (Exception e) {
+                Log.e(TAG, "Exception creating mouse surface",e);
+            }
+            mMlx = mMx;
+            mMly = mMy;
+            mMlw = mMw;
+            mMlh = mMh;
         }
 
         if (SHOW_TRANSACTIONS) Log.i(TAG, ">>> OPEN TRANSACTION");

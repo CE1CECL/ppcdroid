@@ -20,6 +20,11 @@
 #include "Dalvik.h"
 #include "native/InternalNativePriv.h"
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <stdio.h>
+
 
 #ifdef WITH_PROFILER
 /* These must match the values in dalvik.system.VMDebug.
@@ -586,6 +591,51 @@ static void Dalvik_dalvik_system_VMDebug_dumpHprofData(const u4* args,
     RETURN_VOID();
 }
 
+
+#define  GDB_CONTROL_NAME      "\0gdb-control"
+#define  GDB_CONTROL_NAME_LEN  (sizeof(GDB_CONTROL_NAME)-1)
+
+void Dalvik_dalvk_system_VMDebug_startGDBServer (const u4* args,
+    JValue* pResult)
+{
+	struct sockaddr_un	addr;
+	socklen_t		addr_len;
+	int sock;
+	int port;
+	char buf[9];
+
+
+        port = args[0];
+	if ( port < 1 || port > 65535 ) {
+		dvmThrowException("Ljava/io/IOException", "Invalid port value");
+		RETURN_VOID();
+	} 
+	snprintf(buf, 9, "%04x%04x", getpid(),port);
+
+	memset(&addr, 0, sizeof(addr));
+	addr.sun_family = AF_UNIX;
+	memcpy(addr.sun_path, GDB_CONTROL_NAME, GDB_CONTROL_NAME_LEN);
+
+	sock = socket( AF_UNIX, SOCK_STREAM, 0 );
+	if ( sock < 0 ) {
+		dvmThrowException("Ljava/io/IOException", "Count not create UNIX socket");
+		RETURN_VOID();
+	}
+
+	addr_len = (GDB_CONTROL_NAME_LEN + sizeof(addr.sun_family));
+
+	if ( connect(sock, (struct sockaddr*)&addr, addr_len) < 0) {
+		dvmThrowException("Ljava/io/IOException", "Count not connect to GDB control socket");
+		RETURN_VOID();
+	}
+
+	write (sock, buf, 8);
+	sleep (1);
+	close (sock);
+
+	RETURN_VOID();
+}
+
 const DalvikNativeMethod dvm_dalvik_system_VMDebug[] = {
     { "getAllocCount",              "(I)I",
         Dalvik_dalvik_system_VMDebug_getAllocCount },
@@ -633,6 +683,8 @@ const DalvikNativeMethod dvm_dalvik_system_VMDebug[] = {
         Dalvik_dalvik_system_VMDebug_threadCpuTimeNanos },
     { "dumpHprofData",              "(Ljava/lang/String;)V",
         Dalvik_dalvik_system_VMDebug_dumpHprofData },
+    { "startGDBServer",            "(I)V",
+	Dalvik_dalvk_system_VMDebug_startGDBServer },
     { NULL, NULL, NULL },
 };
 

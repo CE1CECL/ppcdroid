@@ -131,6 +131,7 @@ $(INSTALLED_BUILD_PROP_TARGET): $(BUILDINFO_SH) $(INTERNAL_BUILD_ID_MAKEFILE)
 			TARGET_BOOTLOADER_BOARD_NAME="$(TARGET_BOOTLOADER_BOARD_NAME)" \
 			BUILD_FINGERPRINT="$(BUILD_FINGERPRINT)" \
 			TARGET_BOARD_PLATFORM="$(TARGET_BOARD_PLATFORM)" \
+			TARGET_BOARD_ARCH="$(TARGET_BOARD_ARCH)" \
 			TARGET_CPU_ABI="$(TARGET_CPU_ABI)" \
 	        bash $(BUILDINFO_SH) > $@
 	$(hide) if [ -f $(TARGET_DEVICE_DIR)/system.prop ]; then \
@@ -1049,7 +1050,7 @@ ifneq ($(TARGET_SIMULATOR),true)
 
 INTERNAL_EMULATOR_PACKAGE_FILES += \
         $(HOST_OUT_EXECUTABLES)/emulator$(HOST_EXECUTABLE_SUFFIX) \
-        prebuilt/android-arm/kernel/kernel-qemu \
+        prebuilt/android-$(TARGET_ARCH)/kernel/kernel-qemu \
         $(INSTALLED_RAMDISK_TARGET) \
 		$(INSTALLED_SYSTEMIMAGE) \
 		$(INSTALLED_USERDATAIMAGE_TARGET)
@@ -1120,6 +1121,14 @@ sdk_atree_files := \
 	$(atree_dir)/sdk.atree \
 	$(atree_dir)/sdk-$(HOST_OS)-$(HOST_ARCH).atree
 
+ifeq ($(TARGET_ARCH),ppc)
+sdk_atree_files += $(atree_dir)/sdk-ppc.atree
+endif
+
+ifeq ($(TARGET_ARCH),mips)
+sdk_atree_files += $(atree_dir)/sdk-mips.atree
+endif
+
 deps := \
 	$(target_notice_file_txt) \
 	$(tools_notice_file_txt) \
@@ -1163,6 +1172,7 @@ $(INTERNAL_SDK_TARGET): $(deps)
 			-I $(HOST_OUT) \
 			-I $(TARGET_COMMON_OUT_ROOT) \
 			-v "PLATFORM_NAME=android-$(PLATFORM_VERSION)" \
+			-v "TARGET_ARCH=$(TARGET_ARCH)" \
 			-o $(PRIVATE_DIR) && \
 		cp -f $(target_notice_file_txt) \
 				$(PRIVATE_DIR)/platforms/android-$(PLATFORM_VERSION)/images/NOTICE.txt && \

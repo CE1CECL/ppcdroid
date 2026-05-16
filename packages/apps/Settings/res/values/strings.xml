@@ -435,11 +435,9 @@
     <!-- Wireless controls settings screen, setting option summary text as airplane mode is being disabled (so it is re-enabling all the wireless conenctions) -->
     <string name="airplane_mode_turning_off">Enabling wireless connections\u2026</string>
     <!-- Main Settings screen settings title for things like Wi-Fi, bluetooth, airplane mode.  This will take you to another screen with those settings. -->
-    <string name="radio_controls_title">Wireless controls</string>
+    <string name="radio_controls_title">Network controls</string>
     <!-- Main Settings screen settings summary text for the "Wireless controls" setting -->
-    <string name="radio_controls_summary">Manage Wi-Fi, Bluetooth, airplane mode, mobile networks, &amp; VPNs</string>
-
-
+    <string name="radio_controls_summary">Manage Wi-Fi, Bluetooth, Ethernet</string>
     <!-- mobile network settings screen, setting check box title -->
     <string name="roaming">Data roaming</string>
     <!-- mobile network settings screen, setting option summary text when check box is selected -->
@@ -458,7 +456,6 @@
     <string name="networks">Operator selection</string>
     <!-- mobile network settings screen, setting option summary text -->
     <string name="sum_carrier_select">Select a network operator</string>
-
     <!-- Date and time settings -->
     <!-- Main Settings screen setting option name to go into the date and time settings-->
     <string name="date_and_time_settings_title">Date &amp; time</string>
@@ -488,7 +485,7 @@
     <!-- Main Settings screen setting option title for the item to take you the security and location screen -->
     <string name="security_settings_title">Security &amp; location</string>
     <!-- Main Settings screen setting option summary text for the item tot ake you to the security and location screen -->
-    <string name="security_settings_summary">Set My Location, screen unlock, SIM card lock, credential storage lock</string>
+    <string name="security_settings_summary">Set My Location, screen unlock, credential storage lock</string>
     <!-- In the security screen, the header title for settings related to  Passwords-->
     <string name="security_passwords_title">Passwords</string>
 
@@ -813,9 +810,9 @@
     <!-- Sound settings screen, setting option summary text -->
     <string name="ringtone_summary">Set your default incoming call ringtone</string>
     <!-- Sound settings screen, setting option name -->
-    <string name="ring_volume_title">Ringer volume</string>
+    <string name="ring_volume_title">Notification volume</string>
     <!-- Sound settings screen, setting option summary text -->
-    <string name="ring_volume_summary">Set volume for incoming calls and notifications</string>
+    <string name="ring_volume_summary">Set volume for notifications</string>
     <!-- Sound settings screen, setting option name checkbox -->
     <string name="vibrate_title">Phone vibrate</string>
     <!-- Sound settings screen, setting option summary text -->
@@ -825,7 +822,7 @@
     <!-- Sound settings screen, setting option summary text -->
     <string name="notification_sound_summary">Set your default notification ringtone</string>
     <!-- Sound settings screen, the title of the volume bar to adjust the incoming call volume -->
-    <string name="incoming_call_volume_title">Incoming call volume</string>
+    <string name="incoming_call_volume_title"></string>
     <!-- Sound settings screen, the title of the volume bar to adjust the notification volume -->
     <string name="notification_volume_title">Notification volume</string>
     <!-- Sound settings screen, the caption of the checkbox for having the notification volume be
@@ -960,7 +957,7 @@
     <!-- About phone screen, summary of the item to go into the phone status screen -->
     <string name="device_status_summary">Phone number, signal, etc.</string>
     <!-- Main settings screen item's title to go into the SD card and storage settings screen-->
-    <string name="storage_settings_title">SD card &amp; phone storage</string>
+    <string name="storage_settings_title">SD card</string>
     <!-- Main settings screen item's summary for the SD card and storage settings -->
     <string name="storage_settings_summary">Unmount SD card, view available storage</string>
     <!-- Do not translate. About phone, status item title -->
@@ -998,7 +995,7 @@
     <!-- About phone, status item title.  How much time the device has had its main CPU awake. -->
     <string name="status_awake_time">Awake time</string>
     <!-- SD card & phone storage settings screen heading. This is displayed above items that pertain to the phone's internal storage  -->
-    <string name="internal_memory">Internal phone storage</string>
+    <string name="internal_memory">Internal system storage</string>
     <!-- SD card & phone storage settings screen heading. This is displayed above items that pertain to the SD card -->
     <string name="sd_memory">SD card</string>
     <!-- SD card & phone storage settings title. The amount of free space for some storage partition.  For example, this is listed under both the "Internal phone storage" section and the "SD card" section. -->
@@ -1135,13 +1132,12 @@
     <!-- Security & location settings screen, setting summary when Use wireless networks check box is clear -->
     <string name="location_networks_disabled">See location in applications (such as Maps) using wireless networks</string>
     <!-- Security & location settings screen, setting summary when Use wireless networks check box is selected -->
-    <string name="location_neighborhood_level">Location determined by Wi-Fi and/or mobile networks</string>
+    <string name="location_neighborhood_level">Location determined by network connection</string>
     <!-- Security & location settings screen, setting check box label if the GPS receiver should be enabled -->
     <string name="location_gps">Enable GPS satellites</string>
     <!-- Security & location settings screen, setting summary when Enable GPS satellites check box is selected -->
-    <string name="location_street_level">When locating, accurate to street level (deselect to conserve battery)</string>
+    <string name="location_street_level">When locating, accurate to street level</string>
     <!-- Security & location settings screen, setting summary when Enable GPS satellites check box is clear -->
-    <string name="location_gps_disabled">Locate to street-level (requires more battery plus view of sky)</string>
     <!-- Setting title for allow sending location to google -->
     <string name="use_location_title">Share with Google</string>
     <!-- Title of dialog to user requesting use of location information to improve services -->
@@ -1149,6 +1145,12 @@
     <!-- Message of dialog to user requesting use of location information -->
     <string name="use_location_warning_message">Allow Google to use location for improved search results and other services</string>
     <!-- Agree -->
+    <string name="location_gps_disabled">Locate to street-level (requires view of sky)</string>
+    <!-- Title of warning dialog to user that location information will be logged -->
+    <string name="location_warning_title">Location consent</string>
+    <!-- Warning text to user that location information will be logged -->
+    <string name="location_warning_message">"Allow Google's location service to collect anonymous and aggregate location data.  Collection will occur regardless of whether any applications are active."</string>
+    <!-- Agree button-->
     <string name="agree">Agree</string>
     <!-- Disagree -->
     <string name="disagree">Disagree</string>
@@ -1156,9 +1158,9 @@
 
     <!-- About --> <skip />
     <!-- Main settings screen, setting title for the user to go into the About phone screen -->
-    <string name="about_settings">About phone</string>
+    <string name="about_settings">About System</string>
     <!-- Main settings screen, setting summary for the user to go into the About phone screen-->
-    <string name="about_settings_summary">View legal info, phone status, software version</string>
+    <string name="about_settings_summary">View legal info, system status, software version</string>
     <!-- About phone settings screen, setting option name to go to dialog that shows legal info -->
     <string name="legal_information">Legal information</string>
     <!-- About phone settings screen, setting option name to see a list of contributors -->
@@ -2011,7 +2013,7 @@ found in the list of installed applications.</string>
     <string name="cstor_is_added">%s is added.</string>
 
     <!-- Sound settings screen, setting check box label -->
-    <string name="emergency_tone_title">Emergency tone</string>
+    <!-- <string name="emergency_tone_title">Emergency tone</string> -->
     <!-- Sound settings screen, setting option summary text -->
     <string name="emergency_tone_summary">Set behavior when an emergency call is placed</string>
 </resources>

@@ -164,7 +164,8 @@ ESR_ReturnCode PCPUTimerReset(PCPUTimer *timer)
 
 struct PCPUTimer_t
 {
-  HANDLE   hThread;
+  // HANDLE   hThread;
+  void *   hThread;
   asr_uint32_t RefTime;
   asr_uint32_t elapsed;
 };
@@ -180,7 +181,7 @@ ESR_ReturnCode PCPUTimerCreate(PCPUTimer **timer)
   tmp = NEW(PCPUTimer, "PCPUTimer");
   if (tmp == NULL) return ESR_OUT_OF_MEMORY;
 
-  tmp->hThread = (HANDLE)pthread_self();
+  tmp->hThread = pthread_self();
   tmp->elapsed = 0;
   *timer = tmp;
 

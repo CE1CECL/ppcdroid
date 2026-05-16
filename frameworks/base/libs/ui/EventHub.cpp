@@ -16,6 +16,7 @@
 //#define LOG_NDEBUG 0
 
 #include <ui/EventHub.h>
+#include <ui/ITSLib.h>
 #include <hardware_legacy/power.h>
 
 #include <cutils/properties.h>
@@ -46,12 +47,19 @@
 #include <sys/poll.h>
 #include <sys/ioctl.h>
 
+#ifndef LONG_BITS
+#define LONG_BITS (sizeof(long) * 8)
+#endif
+
+#define LONG_BITMASK (LONG_BITS - 1)
+#define LONG_BITSZ(x) (((x) + (LONG_BITS - 1)) / LONG_BITS)
+
 /* this macro is used to tell if "bit" is set in "array"
  * it selects a byte from the array, and does a boolean AND
  * operation with a byte that only has the relevant bit set.
  * eg. to check for the 12th bit, we do (array[1] & 1<<4)
  */
-#define test_bit(bit, array)    (array[bit/8] & (1<<(bit%8)))
+#define test_bit(bit, array)    ((array[bit/LONG_BITS] & (1LU<<(bit%LONG_BITS))) != 0)
 
 #define ID_MASK  0x0000ffff
 #define SEQ_MASK 0x7fff0000
@@ -71,7 +79,7 @@ static inline int max(int v1, int v2)
 
 EventHub::device_t::device_t(int32_t _id, const char* _path)
     : id(_id), path(_path), classes(0)
-    , keyBitmask(NULL), layoutMap(new KeyLayoutMap()), next(NULL) {
+    , keyBitmask(NULL), layoutMap(new KeyLayoutMap()), next(NULL),driver(NULL) {
 }
 
 EventHub::device_t::~device_t() {
@@ -168,7 +176,7 @@ int EventHub::getSwitchState(int32_t deviceId, int sw) const
     if (device == NULL) return -1;
     
     if (sw >= 0 && sw <= SW_MAX) {
-        uint8_t sw_bitmask[(SW_MAX+1)/8];
+        unsigned long sw_bitmask[LONG_BITSZ(SW_MAX)];
         memset(sw_bitmask, 0, sizeof(sw_bitmask));
         if (ioctl(mFDs[id_to_index(device->id)].fd,
                    EVIOCGSW(sizeof(sw_bitmask)), sw_bitmask) >= 0) {
@@ -192,7 +200,7 @@ int EventHub::getScancodeState(int32_t deviceId, int code) const
     if (device == NULL) return -1;
     
     if (code >= 0 && code <= KEY_MAX) {
-        uint8_t key_bitmask[(KEY_MAX+1)/8];
+        unsigned long key_bitmask[LONG_BITSZ(KEY_MAX)];
         memset(key_bitmask, 0, sizeof(key_bitmask));
         if (ioctl(mFDs[id_to_index(device->id)].fd,
                    EVIOCGKEY(sizeof(key_bitmask)), key_bitmask) >= 0) {
@@ -217,7 +225,7 @@ int EventHub::getKeycodeState(int32_t deviceId, int code) const
     Vector<int32_t> scanCodes;
     device->layoutMap->findScancodes(code, &scanCodes);
     
-    uint8_t key_bitmask[(KEY_MAX+1)/8];
+    unsigned long key_bitmask[LONG_BITSZ(KEY_MAX)];
     memset(key_bitmask, 0, sizeof(key_bitmask));
     if (ioctl(mFDs[id_to_index(device->id)].fd,
                EVIOCGKEY(sizeof(key_bitmask)), key_bitmask) >= 0) {
@@ -229,7 +237,7 @@ int EventHub::getKeycodeState(int32_t deviceId, int code) const
         const size_t N = scanCodes.size();
         for (size_t i=0; i<N && i<=KEY_MAX; i++) {
             int32_t sc = scanCodes.itemAt(i);
-            //LOGI("Code %d: down=%d", sc, test_bit(sc, key_bitmask));
+            LOGI("Code %d: down=%d", sc, test_bit(sc, key_bitmask));
             if (sc >= 0 && sc <= KEY_MAX && test_bit(sc, key_bitmask)) {
                 return 1;
             }
@@ -252,18 +260,8 @@ EventHub::device_t* EventHub::getDevice(int32_t deviceId) const
     return NULL;
 }
 
-bool EventHub::getEvent(int32_t* outDeviceId, int32_t* outType,
-        int32_t* outScancode, int32_t* outKeycode, uint32_t *outFlags,
-        int32_t* outValue, nsecs_t* outWhen)
+bool EventHub::getEvent(InEvent *inevt)
 {
-    *outDeviceId = 0;
-    *outType = 0;
-    *outScancode = 0;
-    *outKeycode = 0;
-    *outFlags = 0;
-    *outValue = 0;
-    *outWhen = 0;
-
     status_t err;
 
     fd_set readfds;
@@ -273,6 +271,7 @@ bool EventHub::getEvent(int32_t* outDeviceId, int32_t* outType,
     int res;
     int pollres;
     struct input_event iev;
+    memset(inevt, 0, sizeof(*inevt));
 
     // Note that we only allow one caller to getEvent(), so don't need
     // to do locking here...  only when adding/removing devices.
@@ -285,9 +284,9 @@ bool EventHub::getEvent(int32_t* outDeviceId, int32_t* outType,
             LOGV("Reporting device closed: id=0x%x, name=%s\n",
                  device->id, device->path.string());
             mClosingDevices = device->next;
-            *outDeviceId = device->id;
-            if (*outDeviceId == mFirstKeyboardId) *outDeviceId = 0;
-            *outType = DEVICE_REMOVED;
+            inevt->DeviceId = device->id;
+            if (inevt->DeviceId == mFirstKeyboardId) inevt->DeviceId = 0;
+            inevt->Type = DEVICE_REMOVED;
             delete device;
             return true;
         }
@@ -296,9 +295,9 @@ bool EventHub::getEvent(int32_t* outDeviceId, int32_t* outType,
             LOGV("Reporting device opened: id=0x%x, name=%s\n",
                  device->id, device->path.string());
             mOpeningDevices = device->next;
-            *outDeviceId = device->id;
-            if (*outDeviceId == mFirstKeyboardId) *outDeviceId = 0;
-            *outType = DEVICE_ADDED;
+            inevt->DeviceId = device->id;
+            if (inevt->DeviceId == mFirstKeyboardId) inevt->DeviceId = 0;
+            inevt->Type = DEVICE_ADDED;
             return true;
         }
 
@@ -323,37 +322,51 @@ bool EventHub::getEvent(int32_t* outDeviceId, int32_t* outType,
             if(mFDs[i].revents) {
                 LOGV("revents for %d = 0x%08x", i, mFDs[i].revents);
                 if(mFDs[i].revents & POLLIN) {
-                    res = read(mFDs[i].fd, &iev, sizeof(iev));
-                    if (res == sizeof(iev)) {
-                        LOGV("%s got: t0=%d, t1=%d, type=%d, code=%d, v=%d",
-                             mDevices[i]->path.string(),
-                             (int) iev.time.tv_sec, (int) iev.time.tv_usec,
-                             iev.type, iev.code, iev.value);
-                        *outDeviceId = mDevices[i]->id;
-                        if (*outDeviceId == mFirstKeyboardId) *outDeviceId = 0;
-                        *outType = iev.type;
-                        *outScancode = iev.code;
-                        if (iev.type == EV_KEY) {
-                            err = mDevices[i]->layoutMap->map(iev.code, outKeycode, outFlags);
-                            LOGV("iev.code=%d outKeycode=%d outFlags=0x%08x err=%d\n",
-                                iev.code, *outKeycode, *outFlags, err);
-                            if (err != 0) {
-                                *outKeycode = 0;
-                                *outFlags = 0;
-                            }
-                        } else {
-                            *outKeycode = iev.code;
-                        }
-                        *outValue = iev.value;
-                        *outWhen = s2ns(iev.time.tv_sec) + us2ns(iev.time.tv_usec);
+                    if (mDevices[i]->driver) {
+                        if (mDevices[i]->driver->GetEvent(inevt))
+                            continue;
+                        inevt->DeviceId = mDevices[i]->id; //XXX
                         return true;
                     } else {
-                        if (res<0) {
-                            LOGW("could not get event (errno=%d)", errno);
+                        res = read(mFDs[i].fd, &iev, sizeof(iev));
+                        if (res == sizeof(iev)) {
+                            LOGV("%s got: t0=%d, t1=%d, type=%d, code=%d, v=%d",
+                                 mDevices[i]->path.string(),
+                                 (int) iev.time.tv_sec, (int) iev.time.tv_usec,
+                                 iev.type, iev.code, iev.value);
+                            inevt->DeviceId = mDevices[i]->id;
+                            if (inevt->DeviceId == mFirstKeyboardId)
+                                inevt->DeviceId = 0;
+                            inevt->Type = iev.type;
+                            inevt->Scancode = iev.code;
+                            if (iev.type == EV_KEY) {
+                                err = mDevices[i]->layoutMap->map(iev.code,
+                                        &inevt->Keycode,
+                                        &inevt->Flags);
+                                LOGV("iev.code=%d outKeycode=%d outFlags=0x%08x"
+                                                " err=%d\n", iev.code,
+                                                inevt->Keycode, inevt->Flags,
+                                                err);
+                                if (err != 0) {
+                                    inevt->Keycode = 0;
+                                    inevt->Flags = 0;
+                                }
+                            } else {
+                                inevt->Keycode = iev.code;
+                            }
+                            inevt->Value = iev.value;
+                            inevt->When = s2ns(iev.time.tv_sec) +
+                                    us2ns(iev.time.tv_usec);
+                            return true;
                         } else {
-                            LOGE("could not get event (wrong size: %d)", res);
+                            if (res<0) {
+                                LOGW("could not get event (errno=%d)", errno);
+                            } else {
+                                LOGE("could not get event (wrong size: %d)",
+                                                res);
+                            }
+                            continue;
                         }
-                        continue;
                     }
                 }
             }
@@ -541,65 +554,101 @@ int EventHub::open_device(const char *deviceName)
     mFDs[mFDCount].events = POLLIN;
 
     // figure out the kinds of events the device reports
-    uint8_t key_bitmask[(KEY_MAX+1)/8];
+    unsigned long key_bitmask[LONG_BITSZ(KEY_MAX)];
+    int ret;
     memset(key_bitmask, 0, sizeof(key_bitmask));
     LOGV("Getting keys...");
-    if (ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(key_bitmask)), key_bitmask) >= 0) {
-        //LOGI("MAP\n");
-        //for (int i=0; i<((KEY_MAX+1)/8); i++) {
-        //    LOGI("%d: 0x%02x\n", i, key_bitmask[i]);
-        //}
-        for (int i=0; i<((BTN_MISC+7)/8); i++) {
-            if (key_bitmask[i] != 0) {
-                device->classes |= CLASS_KEYBOARD;
-                // 'Q' key support = cheap test of whether this is an alpha-capable kbd
-                if (test_bit(KEY_Q, key_bitmask)) {
-                    device->classes |= CLASS_ALPHAKEY;
-                }
-                break;
+    ret = ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(key_bitmask)), key_bitmask);
+    if (ret < 0) {
+        delete device;
+        LOGE("Failed to EVIOCGBIT(EV_KEY..)");
+        return -1;
+    }
+
+#if 1
+    LOGI("MAP\n");
+    for (unsigned int i=0; i< LONG_BITSZ(KEY_MAX); i++)
+        LOGI("%d: 0x%08lx\n", i, key_bitmask[i]);
+#endif
+
+    for (unsigned int i=0; i<(BTN_MISC+(sizeof(long)*8 - 1)/(sizeof(long)*8)); i++) {
+        if (key_bitmask[i] != 0) {
+            device->classes |= CLASS_KEYBOARD;
+            LOGI("%s:%d CLASS_KEYBOARD\n", __FILE__, __LINE__);
+            // 'Q' key support = cheap test of whether this is an alpha-capable kbd
+            if (test_bit(KEY_Q, key_bitmask)) {
+                device->classes |= CLASS_ALPHAKEY;
+                LOGI("%s:%d CLASS_ALPHAKEY\n", __FILE__, __LINE__);
             }
-        }
-        if ((device->classes & CLASS_KEYBOARD) != 0) {
-            device->keyBitmask = new uint8_t[(KEY_MAX+1)/8];
-            if (device->keyBitmask != NULL) {
-                memcpy(device->keyBitmask, key_bitmask, sizeof(key_bitmask));
-            } else {
-                delete device;
-                LOGE("out of memory allocating key bitmask");
-                return -1;
-            }
+            break;
         }
     }
+
+    if ((device->classes & CLASS_KEYBOARD) != 0) {
+        device->keyBitmask = new unsigned long[LONG_BITSZ(KEY_MAX)];
+        if (device->keyBitmask != NULL) {
+            memcpy(device->keyBitmask, key_bitmask, sizeof(key_bitmask));
+        } else {
+            delete device;
+            LOGE("out of memory allocating key bitmask");
+            return -1;
+        }
+    }
+
     if (test_bit(BTN_MOUSE, key_bitmask)) {
-        uint8_t rel_bitmask[(REL_MAX+1)/8];
+        unsigned long rel_bitmask[LONG_BITSZ(REL_MAX)];
         memset(rel_bitmask, 0, sizeof(rel_bitmask));
         LOGV("Getting relative controllers...");
-        if (ioctl(fd, EVIOCGBIT(EV_REL, sizeof(rel_bitmask)), rel_bitmask) >= 0)
-        {
+#if 1
+        LOGI("REL MAP\n");
+        for (unsigned int i=0; i<LONG_BITSZ(REL_MAX); i++)
+            LOGI("%d: 0x%08lx\n", i, rel_bitmask[i]);
+#endif
+        if (ioctl(fd, EVIOCGBIT(EV_REL, sizeof(rel_bitmask)), rel_bitmask) >= 0) {
+            LOGI("%s:%d EV_REL\n", __FILE__, __LINE__);
             if (test_bit(REL_X, rel_bitmask) && test_bit(REL_Y, rel_bitmask)) {
-                device->classes |= CLASS_TRACKBALL;
+#ifdef BOARD_USES_MOUSE
+                if (test_bit(BTN_LEFT, key_bitmask) && test_bit(BTN_RIGHT, key_bitmask))
+                    device->classes |= CLASS_MOUSE;
+                else
+#endif
+                    device->classes |= CLASS_TRACKBALL;
             }
         }
     }
     if (test_bit(BTN_TOUCH, key_bitmask)) {
-        uint8_t abs_bitmask[(ABS_MAX+1)/8];
+        unsigned long abs_bitmask[LONG_BITSZ(ABS_MAX)];
         memset(abs_bitmask, 0, sizeof(abs_bitmask));
         LOGV("Getting absolute controllers...");
         if (ioctl(fd, EVIOCGBIT(EV_ABS, sizeof(abs_bitmask)), abs_bitmask) >= 0)
         {
+            LOGI("%s:%d EV_ABS\n", __FILE__, __LINE__);
             if (test_bit(ABS_X, abs_bitmask) && test_bit(ABS_Y, abs_bitmask)) {
                 device->classes |= CLASS_TOUCHSCREEN;
+                LOGI("%s:%d CLASS_TOUCHSCREEN\n", __FILE__, __LINE__);
+
+#ifdef BOARD_USES_TSLIB
+                //Attach TSlib if possible
+                device->driver = new ITSLib(fd);
+                if (device->driver && !device->driver->Initialize()) {
+                    delete device->driver;
+                    device->driver =  NULL;
+                    LOGE("Unable to use TSLib");
+                } else {
+                    LOGE("TSLib is used to handle TouchScreen events");
+                }
+#endif
             }
         }
     }
 
 #ifdef EV_SW
     // figure out the switches this device reports
-    uint8_t sw_bitmask[(SW_MAX+1)/8];
+    unsigned long sw_bitmask[LONG_BITSZ(SW_MAX)];
     memset(sw_bitmask, 0, sizeof(sw_bitmask));
     if (ioctl(fd, EVIOCGBIT(EV_SW, sizeof(sw_bitmask)), sw_bitmask) >= 0) {
         for (int i=0; i<EV_SW; i++) {
-            //LOGI("Device 0x%x sw %d: has=%d", device->id, i, test_bit(i, sw_bitmask));
+            LOGI("Device 0x%x sw %d: has=%d", device->id, i, test_bit(i, sw_bitmask));
             if (test_bit(i, sw_bitmask)) {
                 if (mSwitches[i] == 0) {
                     mSwitches[i] = device->id;

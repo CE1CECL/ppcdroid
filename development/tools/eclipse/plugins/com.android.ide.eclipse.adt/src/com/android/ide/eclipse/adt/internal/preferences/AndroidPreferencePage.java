@@ -16,6 +16,7 @@
 
 package com.android.ide.eclipse.adt.internal.preferences;
 
+import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk;
 import com.android.ide.eclipse.adt.internal.sdk.Sdk.ITargetChangeListener;
@@ -24,6 +25,8 @@ import com.android.sdkuilib.internal.widgets.SdkTargetSelector;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.preference.DirectoryFieldEditor;
+import org.eclipse.jface.preference.StringButtonFieldEditor;
+import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
@@ -51,6 +54,7 @@ public class AndroidPreferencePage extends FieldEditorPreferencePage implements
         IWorkbenchPreferencePage {
 
     private SdkDirectoryFieldEditor mDirectoryField;
+	private StringButtonFieldEditor mAdbHostField;
 
     public AndroidPreferencePage() {
         super(GRID);
@@ -68,8 +72,21 @@ public class AndroidPreferencePage extends FieldEditorPreferencePage implements
 
         mDirectoryField = new SdkDirectoryFieldEditor(AdtPlugin.PREFS_SDK_DIR,
                 Messages.AndroidPreferencePage_SDK_Location_, getFieldEditorParent());
+        
+        mAdbHostField = new StringButtonFieldEditor(AdtPlugin.PREFS_ADB_HOST, "ABDHOST IP", getFieldEditorParent()) {
 
+			@Override
+			protected String changePressed() {
+				AndroidDebugBridge adb = AndroidDebugBridge.getBridge();
+				if (adb != null)
+					adb.restart();
+				return null;
+			}
+        	
+        };
+        mAdbHostField.setChangeButtonText("Restart ADB");
         addField(mDirectoryField);
+        addField(mAdbHostField);
     }
 
     /*

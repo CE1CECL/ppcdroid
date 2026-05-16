@@ -42,9 +42,12 @@
 #undef CT_LE_W
 #undef CT_LE_L
 
-#if defined __arm__
+#if defined __arm__ || defined __mips__
 	#undef __BYTE_ORDER
 	#define __BYTE_ORDER __LITTLE_ENDIAN
+#else
+	#undef __BYTE_ORDER
+	#define __BYTE_ORDER __BIG_ENDIAN
 #endif
 
 #if __BYTE_ORDER == __BIG_ENDIAN

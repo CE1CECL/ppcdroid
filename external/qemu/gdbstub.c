@@ -97,7 +97,7 @@ static int get_char(GDBState *s)
         if (ret < 0) {
             if (errno == ECONNRESET)
                 s->fd = -1;
-            if (errno != EINTR && errno != EAGAIN)
+            if (errno != EAGAIN && errno != EWOULDBLOCK)
                 return -1;
         } else if (ret == 0) {
             socket_close(s->fd);
@@ -150,7 +150,7 @@ static void put_buffer(GDBState *s, const uint8_t *buf, int len)
     while (len > 0) {
         ret = socket_send(s->fd, buf, len);
         if (ret < 0) {
-            if (errno != EINTR && errno != EAGAIN)
+            if (errno != EINTR && errno != EAGAIN && errno != EWOULDBLOCK)
                 return;
         } else {
             buf += ret;
@@ -732,16 +732,16 @@ static int cpu_gdb_read_registers(CPUState *env, uint8_t *mem_buf)
         for (i = 0; i < 32; i++)
           {
             if (env->CP0_Status & (1 << CP0St_FR))
-              *(target_ulong *)ptr = tswapl(env->fpu->fpr[i].d);
+              *(target_ulong *)ptr = tswapl(env->active_fpu.fpr[i].d);
             else
-              *(target_ulong *)ptr = tswap32(env->fpu->fpr[i].w[FP_ENDIAN_IDX]);
+              *(target_ulong *)ptr = tswap32(env->active_fpu.fpr[i].w[FP_ENDIAN_IDX]);
             ptr += sizeof(target_ulong);
           }
 
-        *(target_ulong *)ptr = (int32_t)tswap32(env->fpu->fcr31);
+        *(target_ulong *)ptr = (int32_t)tswap32(env->active_fpu.fcr31);
         ptr += sizeof(target_ulong);
 
-        *(target_ulong *)ptr = (int32_t)tswap32(env->fpu->fcr0);
+        *(target_ulong *)ptr = (int32_t)tswap32(env->active_fpu.fcr0);
         ptr += sizeof(target_ulong);
       }
 
@@ -749,6 +749,7 @@ static int cpu_gdb_read_registers(CPUState *env, uint8_t *mem_buf)
     *(target_ulong *)ptr = 0;
     ptr += sizeof(target_ulong);
 
+#if 0 /* XXX: temporary hack */
     /* Registers for embedded use, we just pad them. */
     for (i = 0; i < 16; i++)
       {
@@ -759,6 +760,7 @@ static int cpu_gdb_read_registers(CPUState *env, uint8_t *mem_buf)
     /* Processor ID. */
     *(target_ulong *)ptr = (int32_t)tswap32(env->CP0_PRid);
     ptr += sizeof(target_ulong);
+#endif
 
     return ptr - mem_buf;
 }
@@ -772,7 +774,7 @@ static unsigned int ieee_rm[] =
     float_round_down
   };
 #define RESTORE_ROUNDING_MODE \
-    set_float_rounding_mode(ieee_rm[env->fpu->fcr31 & 3], &env->fpu->fp_status)
+    set_float_rounding_mode(ieee_rm[env->active_fpu.fcr31 & 3], &env->active_fpu.fp_status)
 
 static void cpu_gdb_write_registers(CPUState *env, uint8_t *mem_buf, int size)
 {
@@ -809,13 +811,13 @@ static void cpu_gdb_write_registers(CPUState *env, uint8_t *mem_buf, int size)
         for (i = 0; i < 32; i++)
           {
             if (env->CP0_Status & (1 << CP0St_FR))
-              env->fpu->fpr[i].d = tswapl(*(target_ulong *)ptr);
+              env->active_fpu.fpr[i].d = tswapl(*(target_ulong *)ptr);
             else
-              env->fpu->fpr[i].w[FP_ENDIAN_IDX] = tswapl(*(target_ulong *)ptr);
+              env->active_fpu.fpr[i].w[FP_ENDIAN_IDX] = tswapl(*(target_ulong *)ptr);
             ptr += sizeof(target_ulong);
           }
 
-        env->fpu->fcr31 = tswapl(*(target_ulong *)ptr) & 0xFF83FFFF;
+        env->active_fpu.fcr31 = tswapl(*(target_ulong *)ptr) & 0xFF83FFFF;
         ptr += sizeof(target_ulong);
 
         /* The remaining registers are assumed to be read-only. */
@@ -1435,7 +1437,7 @@ gdb_handlesig (CPUState *env, int sig)
           for (i = 0; i < n; i++)
             gdb_read_byte (s, buf[i]);
         }
-      else if (n == 0 || errno != EAGAIN)
+      else if (n == 0 || (errno != EAGAIN && errno != EWOULDBLOCK))
         {
           /* XXX: Connection closed.  Should probably wait for annother
              connection before continuing.  */

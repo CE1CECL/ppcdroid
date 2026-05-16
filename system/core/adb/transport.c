@@ -707,13 +707,18 @@ void remove_transport_disconnect(atransport*  t, adisconnect*  dis)
 
 atransport *acquire_one_transport(int state, transport_type ttype, const char* serial, char** error_out)
 {
+    static char DEV_NOT_FOUND_ERR[] = "device not found";
     atransport *t;
     atransport *result = NULL;
     int ambiguous = 0;
+#if ADB_HOST
+    int retry_cnt = 0;
+#endif
+
 
 retry:
     if (error_out)
-        *error_out = "device not found";
+        *error_out = DEV_NOT_FOUND_ERR;
 
     adb_mutex_lock(&transport_lock);
     for (t = transport_list.next; t != &transport_list; t = t->next) {
@@ -776,6 +781,12 @@ retry:
         /* found one that we can take */
         if (error_out)
             *error_out = NULL;
+#if ADB_HOST
+    } else if ( *error_out == DEV_NOT_FOUND_ERR && getenv("ADBHOST") != NULL ) {
+	local_connect (ADB_LOCAL_TRANSPORT_PORT);
+	if ( retry_cnt ++ < 3 )
+		goto retry;
+#endif
     } else if (state != CS_ANY && (serial || !ambiguous)) {
         adb_sleep_ms(1000);
         goto retry;

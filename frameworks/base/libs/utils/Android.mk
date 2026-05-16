@@ -91,6 +91,10 @@ LOCAL_CFLAGS += -DMB_CUR_MAX=1
 endif
 endif
 
+ifeq ($(strip $(BOARD_USES_MOUSE)),true)
+LOCAL_CFLAGS += -DBOARD_USES_MOUSE
+endif
+
 include $(BUILD_HOST_STATIC_LIBRARY)
 
 
@@ -147,12 +151,21 @@ ifeq ($(TARGET_OS)-$(TARGET_ARCH),linux-x86)
 LOCAL_SHARED_LIBRARIES += \
 	libdl
 endif # linux-x86
+ifeq ($(TARGET_OS)-$(TARGET_ARCH),linux-mips)
+# This is needed on x86 to bring in dl_iterate_phdr for CallStack.cpp
+LOCAL_SHARED_LIBRARIES += \
+	libdl
+endif # linux-mips
 endif # sim
 
 LOCAL_MODULE:= libutils
 
 #LOCAL_CFLAGS+=
 #LOCAL_LDFLAGS:=
+
+ifeq ($(strip $(BOARD_USES_MOUSE)),true)
+LOCAL_CFLAGS += -DBOARD_USES_MOUSE
+endif
 
 include $(BUILD_SHARED_LIBRARY)
 

@@ -291,7 +291,7 @@ int32 cc16(uint8 **src, uint8 *dst, int32 *disp, uint8 *coff_tbl)
 {
 
     uint8 *pCb, *pCr;
-    uint16  *pY;
+    uint16  *pY, *orig_pY;
     uint16  *pDst;
     int32       src_pitch, dst_pitch, src_width;
     int32       Y, Cb, Cr, Cg;
@@ -299,6 +299,10 @@ int32 cc16(uint8 **src, uint8 *dst, int32 *disp, uint8 *coff_tbl)
     int32       row, col;
     int32       tmp0, tmp1, tmp2;
     uint32  rgb;
+#ifdef __powerpc__
+    int32       tCb, tCr;
+    uint32      i = 0;
+#endif
     uint8 *clip = coff_tbl + 400;
     int32  cc1 = (*((int32*)(clip - 400)));
     int32  cc3 = (*((int32*)(clip - 396)));
@@ -312,7 +316,7 @@ int32 cc16(uint8 **src, uint8 *dst, int32 *disp, uint8 *coff_tbl)
     if (disp[6]) /* rotate 180 and flip */
     {   /* move the starting point to the bottom-left corner of the picture */
         deltaY = src_pitch * (disp[3] - 1);
-        pY = (uint16*)(src[0] + deltaY);
+        orig_pY = pY = (uint16*)(src[0] + deltaY);
         deltaY = (src_pitch >> 1) * ((disp[3] >> 1) - 1);
         pCb = src[1] + deltaY;
         pCr = src[2] + deltaY;
@@ -324,7 +328,7 @@ int32 cc16(uint8 **src, uint8 *dst, int32 *disp, uint8 *coff_tbl)
     {
         deltaY      = (src_pitch << 1) - src_width;
         deltaCbCr   = (src_pitch - src_width) >> 1;
-        pY = (uint16 *) src[0];
+        orig_pY = pY = (uint16 *) src[0];
         src_pitch >>= 1;
         pCb = src[1];
         pCr = src[2];
@@ -338,10 +342,26 @@ int32 cc16(uint8 **src, uint8 *dst, int32 *disp, uint8 *coff_tbl)
 
         for (col = src_width - 1; col >= 0; col -= 2)
         {
+#ifdef __powerpc__
+            if (!(i & 0x3)) {
+                tCb = *((uint32 *)pCb);
+                tCr = *((uint32 *)pCr);
+                pCb += 4;
+                pCr += 4;
+            }
+            Cb = (tCb >> ((i & 0x3) << 3)) & 0x000000FF;
+            Cr = (tCr >> ((i & 0x3) << 3)) & 0x000000FF;
+            i++;
 
+            if ((((uint32)(pY + src_pitch)) - (uint32)orig_pY) & 0x2)
+                Y = pY[src_pitch - 1];
+            else
+                Y = pY[src_pitch + 1];
+#else
             Cb = *pCb++;
             Cr = *pCr++;
             Y = pY[src_pitch];
+#endif /* __powerpc__ */
 
             Cb -= 128;
             Cr -= 128;
@@ -366,6 +386,9 @@ int32 cc16(uint8 **src, uint8 *dst, int32 *disp, uint8 *coff_tbl)
             rgb     =   tmp1 | (tmp0 << 6);
             rgb     =   tmp2 | (rgb << 5);
 
+#ifdef __powerpc__
+            rgb         =  rgb << 16;
+#endif
             Y   = (Y >> 8) & 0xFF;
 
             Y   += OFFSET_5_1;
@@ -382,12 +405,25 @@ int32 cc16(uint8 **src, uint8 *dst, int32 *disp, uint8 *coff_tbl)
             tmp0    =   tmp1 | (tmp0 << 6);
             tmp0    =   tmp2 | (tmp0 << 5);
 
-            rgb     |= (tmp0 << 16);
+#ifndef __powerpc__
+            rgb     |=  (tmp0 << 16);
+#else
+            rgb     |=  tmp0;          
+#endif
 
             *((uint32*)(pDst + dst_pitch))  = rgb;
 
             //load the top two pixels
+#ifdef __powerpc__
+            if (((uint32)pY - (uint32)orig_pY) & 0x2)
+                Y = *(pY - 1);
+            else
+                Y = *(pY + 1);
+
+            pY++;
+#else
             Y = *pY++;
+#endif /* __powerpc__ */
 
             tmp0    = (Y & 0xFF);   //Low endian    left pixel
             tmp0    += OFFSET_5_1;
@@ -403,6 +439,10 @@ int32 cc16(uint8 **src, uint8 *dst, int32 *disp, uint8 *coff_tbl)
 
             rgb     =   tmp1 | (tmp0 << 6);
             rgb     =   tmp2 | (rgb << 5);
+
+#ifdef __powerpc__
+            rgb     =   rgb << 16;
+#endif
 
             Y   = (Y >> 8) & 0xFF;
 
@@ -420,7 +460,11 @@ int32 cc16(uint8 **src, uint8 *dst, int32 *disp, uint8 *coff_tbl)
             tmp0    =   tmp1 | (tmp0 << 6);
             tmp0    =   tmp2 | (tmp0 << 5);
 
+#ifndef __powerpc__
             rgb     |= (tmp0 << 16);
+#else
+            rgb     |= tmp0;
+#endif
             *((uint32 *)pDst)   = rgb;
             pDst += 2;
 
@@ -429,6 +473,9 @@ int32 cc16(uint8 **src, uint8 *dst, int32 *disp, uint8 *coff_tbl)
         pY  += (deltaY >> 1);
         pCb +=  deltaCbCr;
         pCr +=  deltaCbCr;
+#ifdef __powerpc__
+        i   +=  deltaCbCr;
+#endif
         pDst += (deltaDst); //coz pDst defined as UINT *
     }
     return 1;

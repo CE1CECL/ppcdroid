@@ -620,6 +620,20 @@ INLINE JValue* dvmFieldPtr(const Object* obj, int offset) {
     return ((JValue*)BYTE_OFFSET(obj, offset));
 }
 
+#if __BYTE_ORDER == __BIG_ENDIAN
+INLINE bool dvmGetFieldBoolean(const Object* obj, int offset) {
+    return ((JValue*)BYTE_OFFSET(obj, offset))->zz[3];
+}
+INLINE s1 dvmGetFieldByte(const Object* obj, int offset) {
+    return ((JValue*)BYTE_OFFSET(obj, offset))->bb[3];
+}
+INLINE s2 dvmGetFieldShort(const Object* obj, int offset) {
+    return ((JValue*)BYTE_OFFSET(obj, offset))->ss[1];
+}
+INLINE u2 dvmGetFieldChar(const Object* obj, int offset) {
+    return ((JValue*)BYTE_OFFSET(obj, offset))->cc[1];
+}
+#else
 INLINE bool dvmGetFieldBoolean(const Object* obj, int offset) {
     return ((JValue*)BYTE_OFFSET(obj, offset))->z;
 }
@@ -632,6 +646,7 @@ INLINE s2 dvmGetFieldShort(const Object* obj, int offset) {
 INLINE u2 dvmGetFieldChar(const Object* obj, int offset) {
     return ((JValue*)BYTE_OFFSET(obj, offset))->c;
 }
+#endif
 INLINE s4 dvmGetFieldInt(const Object* obj, int offset) {
     return ((JValue*)BYTE_OFFSET(obj, offset))->i;
 }
@@ -683,6 +698,24 @@ INLINE JValue* dvmStaticFieldPtr(const StaticField* sfield) {
     return (JValue*)&sfield->value;
 }
 
+
+
+
+#if __BYTE_ORDER == __BIG_ENDIAN
+INLINE bool dvmGetStaticFieldBoolean(const StaticField* sfield) {
+    return sfield->value.zz[3];
+}
+INLINE s1 dvmGetStaticFieldByte(const StaticField* sfield) {
+    return sfield->value.bb[3];
+}
+INLINE s2 dvmGetStaticFieldShort(const StaticField* sfield) {
+    return sfield->value.ss[1];
+}
+INLINE u2 dvmGetStaticFieldChar(const StaticField* sfield) {
+    return sfield->value.cc[1];
+}
+#else
+
 INLINE bool dvmGetStaticFieldBoolean(const StaticField* sfield) {
     return sfield->value.z;
 }
@@ -695,6 +728,7 @@ INLINE s2 dvmGetStaticFieldShort(const StaticField* sfield) {
 INLINE u2 dvmGetStaticFieldChar(const StaticField* sfield) {
     return sfield->value.c;
 }
+#endif
 INLINE s4 dvmGetStaticFieldInt(const StaticField* sfield) {
     return sfield->value.i;
 }

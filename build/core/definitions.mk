@@ -1042,6 +1042,13 @@ define transform-to-stripped
 $(hide) $(SOSLIM) --strip --shady --quiet $< --outfile $@
 endef
 
+# Allow for GNU strip to be used in the case where prelinking is not done.
+define transform-to-gnu-stripped
+@mkdir -p $(dir $@)
+@echo "target GNU Strip: $(PRIVATE_MODULE) ($@)"
+$(hide) $(TARGET_STRIP) --strip-unneeded $< -o $@
+endef
+
 define transform-to-prelinked
 @mkdir -p $(dir $@)
 @echo "target Prelink: $(PRIVATE_MODULE) ($@)"

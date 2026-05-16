@@ -46,6 +46,7 @@ BUILD_HOST_SHARED_LIBRARY:= $(BUILD_SYSTEM)/host_shared_library.mk
 BUILD_STATIC_LIBRARY:= $(BUILD_SYSTEM)/static_library.mk
 BUILD_RAW_STATIC_LIBRARY := $(BUILD_SYSTEM)/raw_static_library.mk
 BUILD_SHARED_LIBRARY:= $(BUILD_SYSTEM)/shared_library.mk
+BUILD_PLUGIN_LIBRARY:= $(BUILD_SYSTEM)/plugin_library.mk
 BUILD_EXECUTABLE:= $(BUILD_SYSTEM)/executable.mk
 BUILD_RAW_EXECUTABLE:= $(BUILD_SYSTEM)/raw_executable.mk
 BUILD_HOST_EXECUTABLE:= $(BUILD_SYSTEM)/host_executable.mk
@@ -99,6 +100,7 @@ TARGET_ERROR_FLAGS := -Wno-return-type
 # be used, and if that doesn't work, then the default is an
 # arm build
 -include $(TOPDIR)buildspec.mk
+-include vendor/*/$(TARGET_PRODUCT)/buildspec.mk
 
 # ---------------------------------------------------------------
 # Define most of the global variables.  These are the ones that

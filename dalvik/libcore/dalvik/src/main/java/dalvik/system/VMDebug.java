@@ -275,6 +275,32 @@ public final class VMDebug {
      */
     public static native void dumpHprofData(String fileName) throws IOException;
 
+    /**
+     * @hide
+     *
+     * 	Starts gdbserver for given process
+     *
+     * 	Starts gdbserver listening for gdb to connect to port 10000
+     *
+     * 	@throws IOException if an error occurs while connecting
+     * 	
+     */
+    public static void startGDBServer() throws IOException { startGDBServer(10000); }
+
+    /**
+     * @hide
+     *
+     * 	Starts gdbserver for given process
+     *
+     * 	Starts gdbserver listening for gdb to connect on given port
+     *
+     * 	@throws IOException if an error occurs while connecting
+     * 	
+     */
+    public static native void startGDBServer(int port) throws IOException;
+   
+   
+
     /* don't ask */
     static native void printThis(Object thisThing, int count, int thing);
 

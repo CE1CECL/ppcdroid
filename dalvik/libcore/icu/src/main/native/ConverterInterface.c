@@ -923,13 +923,14 @@ static jstring getICUCanonicalName(JNIEnv *env, jclass jClass, jstring enc) {
     const char* encName = (*env)->GetStringUTFChars(env,enc,NULL);
     const char* canonicalName = NULL;
     jstring ret = NULL;
+
     if(encName) {
         // BEGIN android-removed
         // if(strcmp(encName,"UTF-16")==0) {
         //     ret = ((*env)->NewStringUTF(env,UTF_16BE));
         // }else
         // END android-removed
-        if((canonicalName = ucnv_getCanonicalName(encName, "MIME", &error))!=NULL) {
+       if((canonicalName = ucnv_getCanonicalName(encName, "MIME", &error))!=NULL) {
             ret = ((*env)->NewStringUTF(env, canonicalName));
         }else if((canonicalName = ucnv_getCanonicalName(encName, "IANA", &error))!=NULL) {
             ret = ((*env)->NewStringUTF(env, canonicalName));
@@ -951,7 +952,7 @@ static jstring getICUCanonicalName(JNIEnv *env, jclass jClass, jstring enc) {
             }
             ucnv_close(conv);
         }else{
-            /* unsupported encoding */
+           /* unsupported encoding */
            ret = ((*env)->NewStringUTF(env, ""));
         }
     }

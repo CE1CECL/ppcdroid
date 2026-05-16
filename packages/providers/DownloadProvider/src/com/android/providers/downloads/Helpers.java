@@ -484,6 +484,11 @@ public class Helpers {
                 }
             }
         }
+
+	/* check ethernet connection at last */
+	if (connectivity.EthEnabled())
+		return true;
+
         if (Constants.LOGVV) {
             Log.v(Constants.TAG, "network is not available");
         }

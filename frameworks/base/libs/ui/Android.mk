@@ -32,8 +32,23 @@ LOCAL_SHARED_LIBRARIES := \
 	libutils \
 	libpixelflinger \
 	libhardware \
-	libhardware_legacy
+	libhardware_legacy \
 
 LOCAL_MODULE:= libui
+
+ifeq ($(strip $(BOARD_USES_MOUSE)),true)
+LOCAL_CFLAGS += -DBOARD_USES_MOUSE
+endif
+
+ifeq ($(strip $(BOARD_USES_TSLIB)),true)
+LOCAL_SRC_FILES += ITSLib.cpp
+LOCAL_C_INCLUDES += external/tslib/src
+LOCAL_SHARED_LIBRARIES += libts
+LOCAL_CFLAGS += -DBOARD_USES_TSLIB
+endif
+
+ifeq ($(strip $(BOARD_HAS_BROKEN_PAGEFLIP)),true)
+LOCAL_CFLAGS += -DBOARD_HAS_BROKEN_PAGEFLIP
+endif
 
 include $(BUILD_SHARED_LIBRARY)

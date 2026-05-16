@@ -34,7 +34,7 @@ bin/mksdcard tools/mksdcard
 bin/zipalign tools/zipalign
 
 # the uper-jar file that apps link against
-out/target/common/obj/PACKAGING/android_jar_intermediates/android.jar platforms/${PLATFORM_NAME}/android.jar
+obj/PACKAGING/android_jar_intermediates/android.jar platforms/${PLATFORM_NAME}/android.jar
 
 # eclipse files for SWT
 framework/org.eclipse.core.commands_3.4.0.I20080509-2000.jar tools/lib/org.eclipse.core.commands_3.4.0.I20080509-2000.jar
@@ -140,7 +140,7 @@ bin/emulator tools/emulator
 system.img platforms/${PLATFORM_NAME}/images/system.img
 ramdisk.img platforms/${PLATFORM_NAME}/images/ramdisk.img
 userdata.img platforms/${PLATFORM_NAME}/images/userdata.img
-prebuilt/android-arm/kernel/kernel-qemu platforms/${PLATFORM_NAME}/images/kernel-qemu
+prebuilt/android-${TARGET_ARCH}/kernel/kernel-qemu platforms/${PLATFORM_NAME}/images/kernel-qemu
 external/qemu/android/avd/hardware-properties.ini tools/lib/hardware-properties.ini
 
 # emulator skins
@@ -148,6 +148,7 @@ development/emulator/skins/HVGA     platforms/${PLATFORM_NAME}/skins/HVGA
 development/emulator/skins/QVGA     platforms/${PLATFORM_NAME}/skins/QVGA
 development/emulator/skins/WVGA800  platforms/${PLATFORM_NAME}/skins/WVGA800
 development/emulator/skins/WVGA854  platforms/${PLATFORM_NAME}/skins/WVGA854
+development/emulator/skins/HMP      platforms/${PLATFORM_NAME}/skins/HMP
 
 # NOTICE files are copied by build/core/Makefile
 development/tools/scripts/sdk_files_NOTICE.txt platforms/${PLATFORM_NAME}/templates/NOTICE.txt

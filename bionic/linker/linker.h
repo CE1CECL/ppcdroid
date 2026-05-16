@@ -108,6 +108,7 @@ struct soinfo
 
     const char *strtab;
     Elf32_Sym *symtab;
+    unsigned sym_ent;
 
     unsigned nbucket;
     unsigned nchain;
@@ -116,11 +117,26 @@ struct soinfo
 
     unsigned *plt_got;
 
-    Elf32_Rel *plt_rel;
+	unsigned plt_type;
+	union {
+		Elf32_Rel *rel;
+		Elf32_Rela *rela;
+		void *rel_any;
+	} plt;
+    unsigned plt_rel_sz;
+    unsigned plt_rel_ent;
     unsigned plt_rel_count;
 
     Elf32_Rel *rel;
+    unsigned rel_sz;
+    unsigned rel_ent;
     unsigned rel_count;
+
+    /* RELA */
+    Elf32_Rela *rela;
+    unsigned rela_sz;
+    unsigned rela_ent;
+    unsigned rela_count;
 
     unsigned *preinit_array;
     unsigned preinit_array_count;
@@ -139,16 +155,44 @@ struct soinfo
     unsigned ARM_exidx_count;
 #endif
 
+#ifdef ANDROID_MIPS_LINKER
+	/* Information for GOT relocating. */
+	unsigned mips_gotlocnum;
+	unsigned mips_gotsym;
+	unsigned mips_symtabno;
+#endif
+
+#ifdef ANDROID_PPC_LINKER
+	unsigned ppc_got;
+	unsigned *pltresolve;
+	unsigned *pltcall;
+	unsigned *pltinfo;
+	unsigned *first_rela;
+	unsigned *plttable;
+#endif
+
     unsigned refcount;
     struct link_map linkmap;
 };
 
 
 extern soinfo libdl_info;
+extern int debug_verbosity;
+extern int pid;
+extern Elf32_Sym *_do_lookup_in_so(soinfo *si, const char *name,
+							unsigned *elf_hash);
+extern Elf32_Sym * _do_lookup(soinfo *user_si, const char *name,
+							unsigned *base);
+extern Elf32_Sym * _do_lookup_non_local(soinfo *user_si, const char *name,
+							unsigned *base);
 
-/* these must all be powers of two */
+#ifdef __mips__
+#define LIBBASE 0x40000000
+#define LIBLAST 0x50000000
+#else
 #define LIBBASE 0x80000000
 #define LIBLAST 0x90000000
+#endif
 #define LIBINC  0x00100000
 
 
@@ -166,6 +210,52 @@ extern soinfo libdl_info;
 #define R_386_GLOB_DAT   6
 #define R_386_JUMP_SLOT  7
 #define R_386_RELATIVE   8
+
+#elif defined(ANDROID_MIPS_LINKER)
+
+#define R_MIPS_REL32	3
+
+#elif defined(ANROID_PPC_LINKER)
+
+/* PowerPC relocations defined by the ABIs */
+/* XXX don't know how many are used yet */
+#define R_PPC_NONE		0
+#define R_PPC_ADDR32		1	/* 32bit absolute address */
+#define R_PPC_ADDR24		2	/* 26bit address, 2 bits ignored.  */
+#define R_PPC_ADDR16		3	/* 16bit absolute address */
+#define R_PPC_ADDR16_LO		4	/* lower 16bit of absolute address */
+#define R_PPC_ADDR16_HI		5	/* high 16bit of absolute address */
+#define R_PPC_ADDR16_HA		6	/* adjusted high 16bit */
+#define R_PPC_ADDR14		7	/* 16bit address, 2 bits ignored */
+#define R_PPC_ADDR14_BRTAKEN	8
+#define R_PPC_ADDR14_BRNTAKEN	9
+#define R_PPC_REL24		10	/* PC relative 26 bit */
+#define R_PPC_REL14		11	/* PC relative 16 bit */
+#define R_PPC_REL14_BRTAKEN	12
+#define R_PPC_REL14_BRNTAKEN	13
+#define R_PPC_GOT16		14
+#define R_PPC_GOT16_LO		15
+#define R_PPC_GOT16_HI		16
+#define R_PPC_GOT16_HA		17
+#define R_PPC_PLTREL24		18
+#define R_PPC_COPY		19
+#define R_PPC_GLOB_DAT		20
+#define R_PPC_JMP_SLOT		21
+#define R_PPC_RELATIVE		22
+#define R_PPC_LOCAL24PC		23
+#define R_PPC_UADDR32		24
+#define R_PPC_UADDR16		25
+#define R_PPC_REL32		26
+#define R_PPC_PLT32		27
+#define R_PPC_PLTREL32		28
+#define R_PPC_PLT16_LO		29
+#define R_PPC_PLT16_HI		30
+#define R_PPC_PLT16_HA		31
+#define R_PPC_SDAREL16		32
+#define R_PPC_SECTOFF		33
+#define R_PPC_SECTOFF_LO	34
+#define R_PPC_SECTOFF_HI	35
+#define R_PPC_SECTOFF_HA	36
 
 #endif /* ANDROID_*_LINKER */
 
@@ -200,6 +290,13 @@ extern soinfo libdl_info;
 */
 #define R_ARM_ABS32      2
 
+/* define architecture relation type (DT_REL or DT_RELA) */
+#if !defined(ANDROID_PPC_LINKER)
+#define ANDROID_LINKER_ARCH_DEFAULT_RELTYPE  DT_REL
+#else
+#define ANDROID_LINKER_ARCH_DEFAULT_RELTYPE  DT_RELA
+#endif
+
 soinfo *find_library(const char *name);
 unsigned unload_library(soinfo *si);
 Elf32_Sym *lookup_in_library(soinfo *si, const char *name);
@@ -209,8 +306,16 @@ const char *linker_get_error(void);
 #ifdef ANDROID_ARM_LINKER 
 typedef long unsigned int *_Unwind_Ptr;
 _Unwind_Ptr dl_unwind_find_exidx(_Unwind_Ptr pc, int *pcount);
-#elif defined(ANDROID_X86_LINKER)
+#elif defined(ANDROID_X86_LINKER) || defined(ANDROID_MIPS_LINKER) || \
+        defined(ANDROID_PPC_LINKER)
 int dl_iterate_phdr(int (*cb)(struct dl_phdr_info *, size_t, void *), void *);
 #endif
+
+#if defined(ANDROID_MIPS_LINKER) || defined(ANDROID_PPC_LINKER)
+void setup_got(soinfo *si);
+void process_got(soinfo *si);
+#endif
+
+int reloc_library(soinfo *si, unsigned reltype, void *rels, unsigned count);
 
 #endif

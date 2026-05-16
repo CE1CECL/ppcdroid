@@ -64,7 +64,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 public class MediaPlaybackActivity extends Activity implements MusicUtils.Defs,
     View.OnTouchListener, View.OnLongClickListener
 {
-    private static final int USE_AS_RINGTONE = CHILD_MENU_BASE;
+    //private static final int USE_AS_RINGTONE = CHILD_MENU_BASE;
     
     private boolean mOneShot = false;
     private boolean mSeeking = false;
@@ -504,7 +504,7 @@ public class MediaPlaybackActivity extends Activity implements MusicUtils.Defs,
             SubMenu sub = menu.addSubMenu(0, ADD_TO_PLAYLIST, 0,
                     R.string.add_to_playlist).setIcon(android.R.drawable.ic_menu_add);
             MusicUtils.makePlaylistMenu(this, sub);
-            menu.add(0, USE_AS_RINGTONE, 0, R.string.ringtone_menu_short).setIcon(R.drawable.ic_menu_set_as_ringtone);
+            //menu.add(0, USE_AS_RINGTONE, 0, R.string.ringtone_menu_short).setIcon(R.drawable.ic_menu_set_as_ringtone);
             menu.add(0, DELETE_ITEM, 0, R.string.delete_item).setIcon(R.drawable.ic_menu_delete);
             return true;
         }
@@ -539,13 +539,13 @@ public class MediaPlaybackActivity extends Activity implements MusicUtils.Defs,
                             | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     startActivity(intent);
                     break;
-                case USE_AS_RINGTONE: {
-                    // Set the system setting to make this the current ringtone
-                    if (mService != null) {
-                        MusicUtils.setRingtone(this, mService.getAudioId());
-                    }
-                    return true;
-                }
+                //case USE_AS_RINGTONE: {
+                //    // Set the system setting to make this the current ringtone
+                //    if (mService != null) {
+                //         MusicUtils.setRingtone(this, mService.getAudioId());
+                //    }
+                //    return true;
+                //}
                 case PARTY_SHUFFLE:
                     if (mService != null) {
                         int shuffle = mService.getShuffleMode();

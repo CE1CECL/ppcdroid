@@ -62,6 +62,9 @@ int main(int argc, char **argv)
     struct sockaddr_nl nladdr;
     int uevent_sz = 64 * 1024;
 
+#ifdef __mips__
+    sleep(5);	/* Wait for the HMP SD/USB to initialize */
+#endif
     LOGI("Android Volume Daemon version %d.%d", ver_major, ver_minor);
 
     /*
@@ -124,6 +127,9 @@ int main(int argc, char **argv)
     switch_bootstrap();
 
     bootstrap = 0;
+
+    //USB drive
+    usb_bootstrap();
     /*
      * Main loop
      */
@@ -184,7 +190,7 @@ int main(int argc, char **argv)
             }
         }
 
-        if (FD_ISSET(fw_sock, &read_fds)) {
+        if ((fw_sock != -1) && FD_ISSET(fw_sock, &read_fds)) {
             if ((rc = process_framework_command(fw_sock)) < 0) {
                 if (rc == -ECONNRESET) {
                     LOGE("Framework disconnected");
@@ -225,7 +231,7 @@ int send_msg(char* message)
 int send_msg_with_data(char *message, char *data)
 {
     int result = -1;
-
+    LOGI("Send :%s, data: %s",message,data);
     char* buffer = (char *)alloca(strlen(message) + strlen(data) + 1);
     if (!buffer) {
         LOGE("alloca failed in send_msg_with_data");
@@ -234,5 +240,9 @@ int send_msg_with_data(char *message, char *data)
 
     strcpy(buffer, message);
     strcat(buffer, data);
-    return send_msg(buffer);
+    while (result == -1) {
+        result = send_msg(buffer);
+        sleep(1);
+    }
+    return result;
 }

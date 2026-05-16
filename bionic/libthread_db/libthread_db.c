@@ -71,12 +71,30 @@ _event_getmsg_helper(td_thrhandle_t const * handle, void * bkpt_addr)
 {
     void * pc;
 
+#if defined(ANDROID_MIPS_TINFO)
+    pc = (void *)ptrace(PTRACE_PEEKUSR, handle->tid, (void *)64 /* mips pc */, NULL);
+#elif defined(ANDROID_ARM_TINFO)
     pc = (void *)ptrace(PTRACE_PEEKUSR, handle->tid, (void *)60 /* r15/pc */, NULL);
+#elif defined(ANDROID_PPC_TINFO)
+    pc = (void *)ptrace(PTRACE_PEEKUSR, handle->tid, (void *)128 /* ppc pc */, NULL);
+    fprintf (stderr, "%s: pc=%p\n", __func__,pc);
+#else
+    fprintf ( stderr, "%s: Unsupported arch!\n", __func__ );
+    pc = NULL;
+#endif
 
     if (pc == bkpt_addr) {
         // The hook function takes the id of the new thread as it's first param,
         // so grab it from r0.
+#if defined(ANDROID_MIPS_TINFO)
+        gEventMsgHandle.pid = ptrace(PTRACE_PEEKUSR, handle->tid, (void *)4 /* mips a0 */, NULL);
+#elif defined(ANDROID_ARM_TINFO)
         gEventMsgHandle.pid = ptrace(PTRACE_PEEKUSR, handle->tid, (void *)0 /* r0 */, NULL);
+#elif defined(ANDROID_PPC_TINFO)
+        gEventMsgHandle.pid = ptrace(PTRACE_PEEKUSR, handle->tid, (void *)12 /* r0 */, NULL);
+#else
+	return 0;
+#endif
         gEventMsgHandle.tid = gEventMsgHandle.pid;
         return 0x42;
     }

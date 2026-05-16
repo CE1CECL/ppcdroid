@@ -34,8 +34,13 @@
 
 // Define macros for integer alignment and little endian byte order.
 #define OSCL_INTEGERS_WORD_ALIGNED               1
+#ifndef __powerpc__
 #define OSCL_BYTE_ORDER_BIG_ENDIAN               0
 #define OSCL_BYTE_ORDER_LITTLE_ENDIAN            1
+#else
+#define OSCL_BYTE_ORDER_BIG_ENDIAN               1
+#define OSCL_BYTE_ORDER_LITTLE_ENDIAN            0
+#endif
 
 
 #endif

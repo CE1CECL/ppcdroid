@@ -38,7 +38,7 @@ built_dowrapper := \
 dexpreopt_initrc := $(intermediates)/etc/init.rc
 geninitrc_script := $(LOCAL_PATH)/geninitrc.awk
 $(dexpreopt_initrc): script := $(geninitrc_script)
-$(dexpreopt_initrc): system/core/rootdir/init.rc $(geninitrc_script)
+$(dexpreopt_initrc): $(PRODUCT_OUT)/root/init.rc $(geninitrc_script)
 	@echo "Dexpreopt init.rc: $@"
 	@mkdir -p $(dir $@)
 	$(hide) awk -f $(script) < $< > $@
@@ -98,8 +98,9 @@ $(BUILT_DEXPREOPT_SYSTEMIMAGE):
 	@mkdir -p $(DEXPREOPT_TMP)
 	$(hide) \
 	    PATH=$(HOST_OUT_EXECUTABLES):$$PATH \
+	    TARGET_ARCH=$(TARGET_ARCH) \
 	    $(DEXPREOPT) \
-		    --kernel prebuilt/android-arm/kernel/kernel-qemu \
+		    --kernel prebuilt/android-$(TARGET_ARCH)/kernel/kernel-qemu \
 		    --ramdisk $(BUILT_DEXPREOPT_RAMDISK) \
 		    --image $(BUILT_SYSTEMIMAGE_UNOPT) \
 		    --system $(PRODUCT_OUT) \

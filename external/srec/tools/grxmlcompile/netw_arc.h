@@ -20,6 +20,7 @@
 
 #ifndef __netw_arc_h__
 #define __netw_arc_h__
+#include <stdio.h>
 
 #undef assert
 #define assert(X)

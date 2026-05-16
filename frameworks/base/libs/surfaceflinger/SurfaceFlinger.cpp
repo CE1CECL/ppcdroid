@@ -368,8 +368,8 @@ status_t SurfaceFlinger::readyToRun()
 
     // create the surface Heap manager, which manages the heaps
     // (be it in RAM or VRAM) where surfaces are allocated
-    // We give 8 MB per client.
-    mSurfaceHeapManager = new SurfaceHeapManager(this, 8 << 20);
+    // We give 8 MB per client by default.
+    mSurfaceHeapManager = new SurfaceHeapManager(this, SURFACEFLINGER_HEAP_MAX << 20);
 
     
     GLES_localSurfaceManager = static_cast<ISurfaceComposer*>(this);

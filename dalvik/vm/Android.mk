@@ -79,11 +79,13 @@ else  # !DALVIK_VM_DEBUG
   #LOCAL_CFLAGS += -O2 -Winline
   LOCAL_CFLAGS += -DDVM_SHOW_EXCEPTION=1
   # if you want to try with assertions on the device, add:
-  #LOCAL_CFLAGS += -UNDEBUG -DDEBUG=1 -DLOG_NDEBUG=1 -DWITH_DALVIK_ASSERT
+  # LOCAL_CFLAGS += -UNDEBUG -DDEBUG=1 -DLOG_NDEBUG=1 -DWITH_DALVIK_ASSERT
 endif  # !DALVIK_VM_DEBUG
 
 # bug hunting: checksum and verify interpreted stack when making JNI calls
-#LOCAL_CFLAGS += -DWITH_JNI_STACK_CHECK
+ifeq ($(TARGET_ARCH),ppc)
+LOCAL_CFLAGS += -DWITH_JNI_STACK_CHECK
+endif
 
 LOCAL_SRC_FILES := \
 	AllocTracker.c \
@@ -245,6 +247,23 @@ else
 		mterp/out/InterpC-x86.c \
 		mterp/out/InterpAsm-x86.S
   else
+  ifeq ($(TARGET_ARCH),mips)
+    LOCAL_C_INCLUDES += bionic/libc/arch-mips/include
+    LOCAL_SRC_FILES += \
+		arch/mips/Call_o32.S \
+		arch/mips/Hints_o32.c
+    LOCAL_SRC_FILES += \
+		mterp/out/InterpC-mips.c \
+		mterp/out/InterpAsm-mips.S
+  else
+  ifeq ($(TARGET_ARCH),ppc)
+    LOCAL_SRC_FILES += \
+		arch/ppc/Call_legacy_ppc_hw_fp.S \
+		arch/ppc/Hints_hw_fp.c
+    LOCAL_SRC_FILES += \
+		mterp/out/InterpC-ppc.c \
+		mterp/out/InterpAsm-ppc.S
+  else
 	# unknown architecture, try to use FFI
     LOCAL_C_INCLUDES += external/libffi/$(TARGET_OS)-$(TARGET_ARCH)
     LOCAL_SRC_FILES += \
@@ -255,6 +274,8 @@ else
     LOCAL_SRC_FILES += \
 		mterp/out/InterpC-allstubs.c \
 		mterp/out/InterpAsm-allstubs.S
+  endif
+  endif
   endif
 endif
 

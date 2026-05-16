@@ -76,8 +76,8 @@ public class DialtactsActivity extends TabActivity implements TabHost.OnTabChang
         mTabHost.setOnTabChangedListener(this);
 
         // Setup the tabs
-        setupDialerTab();
-        setupCallLogTab();
+        //setupDialerTab();
+        //setupCallLogTab();
         setupContactsTab();
         setupFavoritesTab();
 

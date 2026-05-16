@@ -571,7 +571,7 @@ public class TrackBrowserActivity extends ListActivity
         if (mEditMode) {
             menu.add(0, REMOVE, 0, R.string.remove_from_playlist);
         }
-        menu.add(0, USE_AS_RINGTONE, 0, R.string.ringtone_menu);
+        //menu.add(0, USE_AS_RINGTONE, 0, R.string.ringtone_menu);
         menu.add(0, DELETE_ITEM, 0, R.string.delete_item);
         menu.add(0, SEARCH, 0, R.string.search_title);
         AdapterContextMenuInfo mi = (AdapterContextMenuInfo) menuInfoIn;
@@ -623,10 +623,10 @@ public class TrackBrowserActivity extends ListActivity
                 return true;
             }
 
-            case USE_AS_RINGTONE:
-                // Set the system setting to make this the current ringtone
-                MusicUtils.setRingtone(this, mSelectedId);
-                return true;
+            //case USE_AS_RINGTONE:
+            //    // Set the system setting to make this the current ringtone
+            //    MusicUtils.setRingtone(this, mSelectedId);
+            //    return true;
 
             case DELETE_ITEM: {
                 int [] list = new int[1];

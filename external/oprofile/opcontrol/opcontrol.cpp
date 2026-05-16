@@ -48,6 +48,7 @@ int num_events;
 int start;
 int stop;
 int reset;
+int verbose_daemon;
 
 int selected_events[3];
 int selected_counts[3];
@@ -68,6 +69,7 @@ struct option long_options[] = {
     {"stop", 0, &stop, 1},
     {"shutdown", 0, 0, 'h'},
     {"status", 0, 0, 't'},
+    {"verbose", 0, &verbose_daemon, 1},
     {0, 0, 0, 0},
 };
 
@@ -76,6 +78,13 @@ struct event_info {
     const char *name;
     const char *explanation;
 } event_info[] = {
+#if defined(__mips__)
+    {-2, "TIMER", 
+     "timer based PC statistics"},
+#elif defined(__powerpc__)
+    {0x01, "CPU_CLK",
+     "Cycles"},
+#else
     {0x00, "IFU_IFETCH_MISS", 
      "number of instruction fetch misses"},
     {0x01, "CYCLES_IFU_MEM_STALL", 
@@ -112,6 +121,7 @@ struct event_info {
      "Times write buffer was drained"},
     {0xff, "CPU_CYCLES", 
      "clock cycles counter"}, 
+#endif
 };
 
 void usage() {
@@ -133,6 +143,7 @@ void usage() {
            "   --vmlinux=file   vmlinux kernel image\n"
            "   --kernel-range=start,end\n"
            "                    kernel range vma address in hexadecimal\n"
+           "   --verbose-daemon pass --verbose=all to oprofiled\n"
           );
 }
 
@@ -165,7 +176,7 @@ int do_setup() {
                 strerror(errno));
         return -1;
     }
-    if (system("mount -t oprofilefs nodev "OP_DRIVER_BASE)) {
+    if (system("mount -o nodev -t oprofilefs nodev "OP_DRIVER_BASE)) {
         return -1;
     }
     return 0;
@@ -421,7 +432,13 @@ int main(int argc, char * const argv[])
     }
 
     if (quick) {
+#if defined(__mips__)
+        process_event("TIMER");
+#elif defined(__powerpc__)
+        process_event("CPU_CLK");
+#else
         process_event("CPU_CYCLES");
+#endif
         setup = 1;
     }
 
@@ -444,6 +461,9 @@ int main(int argc, char * const argv[])
         int i;
 
         strcpy(command, "oprofiled --session-dir="OP_DATA_DIR);
+
+	if (verbose_daemon)
+		strcat(command, " --verbose=all");
 
         /* Since counter #3 can only handle CPU_CYCLES, check and shuffle the 
          * order a bit so that the maximal number of events can be profiled
@@ -492,6 +512,11 @@ int main(int argc, char * const argv[])
                 snprintf(command+strlen(command), 1024 - strlen(command), 
                          ",");
             }
+
+	    if (event_info[event_idx].id < 0 ) {
+		snprintf(command+strlen(command), 1024 - strlen(command), event_info[event_idx].name);
+		continue;
+	    }
             /* Compose name:id:count:unit_mask:kernel:user, something like
              * --events=CYCLES_DATA_STALL:2:0:200000:0:1:1,....
              */
@@ -517,10 +542,12 @@ int main(int argc, char * const argv[])
             }
         }
 
+#if !defined(__mips_)
         /* Disable the unused counters */
         for (i = num_events; i < 3; i++) {
             echo_dev("0", 0, "enabled", i);
         }
+#endif
 
         snprintf(command+strlen(command), 1024 - strlen(command), " %s",
                  vmlinux);

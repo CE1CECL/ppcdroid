@@ -23,7 +23,7 @@
 #include <sched.h>
 
 #include <sys/mount.h>
-
+#include <sys/stat.h>
 #include <cutils/config_utils.h>
 #include <cutils/properties.h>
 
@@ -37,15 +37,15 @@
 #include "volmgr_ext3.h"
 #include "volmgr_vfat.h"
 
-#define DEBUG_VOLMGR 0
+#define DEBUG_VOLMGR 1
 
 static volume_t *vol_root = NULL;
 static boolean safe_mode = true;
 
 static struct volmgr_fstable_entry fs_table[] = {
-//    { "ext3", ext_identify, ext_check, ext_mount , true },
-    { "vfat", vfat_identify, vfat_check, vfat_mount , false },
-    { NULL, NULL, NULL, NULL , false}
+    { "ext3", ext_identify, ext_check, ext_mount ,ext_parttype, true},
+    { "vfat", vfat_identify, vfat_check, vfat_mount , vfat_parttype,false},
+    { NULL, NULL, NULL, NULL ,NULL, false}
 };
 
 struct _volume_state_event_map {
@@ -92,33 +92,53 @@ static void volmgr_uncage_reaper(volume_t *vol, void (* cb) (volume_t *, void *a
 static void volmgr_reaper_thread_sighandler(int signo);
 static void volmgr_add_mediapath_to_volume(volume_t *v, char *media_path);
 static int volmgr_send_eject_request(volume_t *v);
-static volume_t *volmgr_lookup_volume_by_mountpoint(char *mount_point, boolean leave_locked);
+static volume_t *volmgr_lookup_volume_by_mountpoint(char *mount_point, boolean leave_locked, boolean checkmounted);
 
-static boolean _mountpoint_mounted(char *mp)
+static boolean _check_mounted(const char *mp, int idx)
 {
     char device[256];
     char mount_path[256];
     char rest[256];
     FILE *fp;
     char line[1024];
+    boolean ret = false;
+
+    if (mp == NULL)
+        return ret;
 
     if (!(fp = fopen("/proc/mounts", "r"))) {
         LOGE("Error opening /proc/mounts (%s)", strerror(errno));
         return false;
     }
 
-    while(fgets(line, sizeof(line), fp)) {
-        line[strlen(line)-1] = '\0';
+    while (fgets(line, sizeof(line), fp)) {
         sscanf(line, "%255s %255s %255s\n", device, mount_path, rest);
-        if (!strcmp(mount_path, mp)) {
-            fclose(fp);
-            return true;
+        if (idx == 1) {
+            char *devname = strrchr(device, '/');
+            if (!devname || strcmp(++devname, mp))
+                continue;
+        } else if (idx == 2) {
+            if (strcmp(mount_path, mp))
+                continue;
         }
-        
+
+        LOGI("%s is already mounted", mp);
+        ret = true;
+        break;
     }
 
     fclose(fp);
-    return false;
+    return ret;
+}
+
+static boolean _device_mounted(const char *mp)
+{
+    return _check_mounted(mp, 1);
+}
+
+static boolean _mountpoint_mounted(const char *mp)
+{
+    return _check_mounted(mp, 2);
 }
 
 /*
@@ -127,7 +147,7 @@ static boolean _mountpoint_mounted(char *mp)
 
 int volmgr_set_volume_key(char *mount_point, unsigned char *key)
 {
-    volume_t *v = volmgr_lookup_volume_by_mountpoint(mount_point, true);
+    volume_t *v = volmgr_lookup_volume_by_mountpoint(mount_point, true, false);
  
     if (!v)
         return -ENOENT;
@@ -150,7 +170,7 @@ int volmgr_format_volume(char *mount_point)
 
     LOG_VOL("volmgr_format_volume(%s):", mount_point);
 
-    v = volmgr_lookup_volume_by_mountpoint(mount_point, true);
+    v = volmgr_lookup_volume_by_mountpoint(mount_point, true, false);
 
     if (!v)
         return -ENOENT;
@@ -178,10 +198,21 @@ int volmgr_format_volume(char *mount_point)
             return rc;
         }
     } else {
-        if ((rc = initialize_mbr(v->dev->disk)) < 0) {
-            LOGE("MBR init failed for %s (%d)", mount_point, rc);
-            pthread_mutex_unlock(&v->lock);
-            return rc;
+        struct volmgr_fstable_entry *fs = NULL;
+        for (fs = fs_table; fs->name; fs++) {
+            if (!fs->identify_fn(v->dev))
+                break;
+        }
+        if (!fs->name ||strcmp(fs->name, "ext3")) {
+            LOGI("Create MBR for vfat partition");
+            if ((rc = initialize_mbr(v->dev->disk)) < 0) {
+                LOGE("MBR init failed for %s (%d)", mount_point, rc);
+                pthread_mutex_unlock(&v->lock);
+                return rc;
+            }
+        } else {
+            LOGI("Format to ext2 next time");
+            rc = 0;
         }
     }
 
@@ -261,6 +292,64 @@ int volmgr_send_states(void)
     return 0;
 }
 
+static volume_t *volmgr_create_vol_from_blockdev(blkdev_t *dev,int skip)
+{
+    volume_t *v = NULL;
+    const char * mount_point= "/sdcard";
+
+
+    if (dev && dev->media && strlen(dev->media->devpath) ) {
+        /*
+         * we need to create mount point for each partition
+         */
+
+        v = calloc (1,sizeof(volume_t));
+        if (v) {
+            v->state = volstate_nomedia;
+            pthread_mutex_init(&v->lock, NULL);
+            pthread_mutex_init(&v->worker_sem, NULL);
+            v->media_paths[0]=malloc(256);
+            truncate_sysfs_path(dev->media->devpath,skip,v->media_paths[0],
+                                256);
+            v->media_type = dev->media->media_type;
+            v->mount_point = malloc(strlen(mount_point) + 1);
+
+            if (v->mount_point) {
+                snprintf(v->mount_point,strlen(mount_point)+1,"%s",mount_point);
+            } else {
+                LOGE("Can not allocate memory for mount point");
+                goto error;
+            }
+
+            /*
+             *ToDo:
+             * We may need a lock here
+             */
+            if (!vol_root) {
+                vol_root = v;
+            } else {
+                volume_t *scan = vol_root;
+                while (scan->next)
+                    scan = scan->next;
+                scan->next = v;
+            }
+        } else
+            goto error;
+    } else {
+        LOGE("Wrong block device found\n");
+    }
+
+    return v;
+ error:
+    if (v) {
+        if (v->media_paths[0])
+            free(v->media_paths[0]);
+        if (v->mount_point)
+            free(v->mount_point);
+        free(v);
+    }
+    return v;
+}
 /*
  * Called when a block device is ready to be
  * evaluated by the volume manager.
@@ -270,8 +359,20 @@ int volmgr_consider_disk(blkdev_t *dev)
     volume_t *vol;
 
     if (!(vol = volmgr_lookup_volume_by_mediapath(dev->media->devpath, true)))
-        return 0;
+    {
+        /*
+         * If we can not find any volume from the configuration file
+         * then we fake the configuration and mount the directory to
+         * either /sdcard
+         */
+        if ((dev->media->media_type != media_scsi) ||
+            (vol= volmgr_create_vol_from_blockdev(dev,3)) == NULL) {
+            return 0;
+        }
+        LOGI("Create new volume object for %s",dev->media->devpath);
+    }
 
+    LOGI(" try to mount %s",dev->media->devpath);
     pthread_mutex_lock(&vol->lock);
 
     if (vol->state == volstate_mounted) {
@@ -289,7 +390,7 @@ int volmgr_start_volume_by_mountpoint(char *mount_point)
 { 
     volume_t *v;
 
-    v = volmgr_lookup_volume_by_mountpoint(mount_point, true);
+    v = volmgr_lookup_volume_by_mountpoint(mount_point, true, false);
     if (!v)
         return -ENOENT;
 
@@ -325,18 +426,25 @@ int volmgr_stop_volume_by_mountpoint(char *mount_point)
 {
     int rc;
     volume_t *v;
-
-    v = volmgr_lookup_volume_by_mountpoint(mount_point, true);
-    if (!v)
+    LOGI("%s look for mount point: %s",__FUNCTION__,mount_point);
+    v = volmgr_lookup_volume_by_mountpoint(mount_point, true, true);
+    if (!v) {
+        LOGI("not found");
         return -ENOENT;
+    }
 
-    if (v->state == volstate_mounted)
+    if (v->state == volstate_mounted){
         volmgr_send_eject_request(v);
+    } else {
+        LOGI("Not mounted");
+    }
 
     if (v->media_type == media_devmapper)
         rc = volmgr_shutdown_volume(v, _cb_volstopped_for_devmapper_teardown, false);
-    else
+    else {
+
         rc = volmgr_shutdown_volume(v, NULL, true);
+    }
 
     /*
      * If shutdown returns -EINPROGRESS,
@@ -349,6 +457,20 @@ int volmgr_stop_volume_by_mountpoint(char *mount_point)
         pthread_mutex_unlock(&v->lock);
     }
     return 0;
+}
+static void volmgr_remount_premount(const char *mount_point) {
+
+    if (_mountpoint_mounted(mount_point)) {
+        volume_t tmp_v;
+        memset(&tmp_v ,0 ,sizeof(volume_t));
+        tmp_v.state = volstate_unmounted;
+        tmp_v.mount_point = strdup(mount_point);
+        if (tmp_v.mount_point) {
+
+            volume_setstate(&tmp_v,volstate_mounted);
+            free(tmp_v.mount_point);
+        }
+    }
 }
 
 int volmgr_notify_eject(blkdev_t *dev, void (* cb) (blkdev_t *))
@@ -402,7 +524,9 @@ int volmgr_notify_eject(blkdev_t *dev, void (* cb) (blkdev_t *))
             }
             dmvol = dmvol->next;
         }
-
+        if (v->media_type != media_devmapper) {
+            volmgr_remount_premount(v->mount_point);
+        }
     } else if (v->state == volstate_formatting) {
         /*
          * The device is being ejected due to
@@ -414,9 +538,11 @@ int volmgr_notify_eject(blkdev_t *dev, void (* cb) (blkdev_t *))
             cb(dev);
         pthread_mutex_unlock(&v->lock);
         return 0;
-    } else
-        volume_setstate(v, volstate_nomedia);
-    
+    } else {
+        if (!_mountpoint_mounted(v->mount_point))
+            volume_setstate(v, volstate_nomedia);
+    }
+
     if (old_state == volstate_ums) {
         ums_disable(v->ums_path);
         pthread_mutex_unlock(&v->lock);
@@ -515,6 +641,12 @@ static int volmgr_send_eject_request(volume_t *v)
 static int _volmgr_consider_disk_and_vol(volume_t *vol, blkdev_t *dev)
 {
     int rc = 0;
+    const char *part_type = FORMAT_TYPE_UNKNOWN;
+    struct volmgr_fstable_entry *fs = NULL;
+
+    FILE *fp;
+    char tmp[1024];
+    char *devname_partition;
 
 #if DEBUG_VOLMGR
     LOG_VOL("volmgr_consider_disk_and_vol(%s, %d:%d):", vol->mount_point,
@@ -529,35 +661,56 @@ static int _volmgr_consider_disk_and_vol(volume_t *vol, blkdev_t *dev)
         return -EADDRINUSE;
     }
 
-    if (vol->state == volstate_formatting) {
+    if (vol->state == volstate_formatting ) {
         LOG_VOL("Evaluating dev '%s' for formattable filesystems for '%s'",
                 dev->devpath, vol->mount_point);
         /*
          * Since we only support creating 1 partition (right now),
          * we can just lookup the target by devno
          */
-        blkdev_t *part = blkdev_lookup_by_devno(dev->major, 1);
+        blkdev_t *part = blkdev_lookup_by_devno(dev->major, dev->minor+1);
+
         if (!part) {
-            part = blkdev_lookup_by_devno(dev->major, 0);
+            part = blkdev_lookup_by_devno(dev->major, dev->minor+1);
             if (!part) {
                 LOGE("Unable to find device to format");
                 return -ENODEV;
             }
         }
+        /*
+         * ToDo
+         * make the format type config-able
+         */
+        if (vol->media_type == media_devmapper)
+        {
+            part_type = FORMAT_TYPE_EXT2;
+        } else {
+            for (fs = fs_table; fs->name; fs++) {
+                if (!fs->identify_fn(part))
+                    break;
+            }
+            if (fs->name != NULL){
+                part_type = fs->parttype_fn(part);
+                LOGI("Found %s partition",part_type);
+            }
+        }
 
-        if ((rc = format_partition(part,
-                                   vol->media_type == media_devmapper ?
-                                   FORMAT_TYPE_EXT2 : FORMAT_TYPE_FAT32)) < 0) {
+        if ((rc = format_partition(part,(char *)part_type)) < 0) {
             LOGE("format failed (%d)", rc);
             return rc;
         }
-        
+
     }
 
     LOGI("Evaluating dev '%s' for mountable filesystems for '%s'",
             dev->devpath, vol->mount_point);
 
     if (dev->nr_parts == 0) {
+        sprintf(tmp, "%s1", dev->devpath);
+        if (!(devname_partition = strrchr(tmp,'/')))
+            return -ENODEV;
+        if (_device_mounted(++devname_partition))
+            return -EBUSY;
         rc = _volmgr_start(vol, dev);
 #if DEBUG_VOLMGR
         LOG_VOL("_volmgr_start(%s, %d:%d) rc = %d", vol->mount_point,
@@ -573,17 +726,26 @@ static int _volmgr_consider_disk_and_vol(volume_t *vol, blkdev_t *dev)
         rc = -ENODEV;
         int i;
         for (i = 0; i < dev->nr_parts; i++) {
-            blkdev_t *part = blkdev_lookup_by_devno(dev->major, (i+1));
+            blkdev_t *part = blkdev_lookup_by_devno(dev->major,
+                                                    (dev->minor + (i + 1)));
             if (!part) {
-                LOGE("Error - unable to lookup partition for blkdev %d:%d", dev->major, (i+1));
+                LOGE("Error - unable to lookup partition for blkdev %d:%d",
+                     dev->major, (dev->minor + (i + 1)));
                 continue;
             }
+
+            sprintf(tmp, "%s%d", dev->devpath, i + 1);
+            if (!(devname_partition = strrchr(tmp,'/')))
+                continue;
+            if (_device_mounted(++devname_partition))
+                continue;
+
             rc = _volmgr_start(vol, part);
 #if DEBUG_VOLMGR
             LOG_VOL("_volmgr_start(%s, %d:%d) rc = %d",
                     vol->mount_point, part->major, part->minor, rc);
 #endif
-            if (!rc || rc == -EBUSY) 
+            if (!rc || rc == -EBUSY)
                 break;
         }
 
@@ -730,6 +892,9 @@ static int volmgr_stop_volume(volume_t *v, void (*cb) (volume_t *, void *), void
             if (emit_statechange)
                 volume_setstate(v, volstate_unmounted);
             v->fs = NULL;
+            if (v->media_type != media_devmapper) {
+                volmgr_remount_premount(v->mount_point);
+            }
             goto out_cb_immed;
         }
 
@@ -810,7 +975,9 @@ static int volmgr_readconfig(char *cfg_path)
     config_load_file(root, cfg_path);
     node = root->first_child;
 
+    LOGI("volmgr_readconfig: path %s, node %08x\n", cfg_path, node);
     while (node) {
+        LOGI("volmgr_readconfig: node %s\n", node->name);
         if (!strncmp(node->name, "volume_", 7))
             volmgr_config_volume(node);
         else
@@ -976,13 +1143,16 @@ static volume_t *volmgr_lookup_volume_by_dev(blkdev_t *dev)
     return NULL;
 }
 
-static volume_t *volmgr_lookup_volume_by_mountpoint(char *mount_point, boolean leave_locked)
+static volume_t *volmgr_lookup_volume_by_mountpoint(char *mount_point, boolean leave_locked, boolean checkmounted)
 {
     volume_t *v = vol_root;
 
+    LOGI("volmgr_lookup_volume_by_mountpoint: %s\n", mount_point);
     while(v) {
         pthread_mutex_lock(&v->lock);
-        if (!strcmp(v->mount_point, mount_point)) {
+        LOGI("Match :%s: with :%s:",v->mount_point,mount_point);
+        if (!strcmp(v->mount_point, mount_point) && v->dev != NULL &&
+           (!checkmounted || (checkmounted && v->state == volstate_mounted))) {
             if (!leave_locked)
                 pthread_mutex_unlock(&v->lock);
             return v;
@@ -1003,7 +1173,7 @@ static volume_t *volmgr_lookup_volume_by_mediapath(char *media_path, boolean fuz
         for (i = 0; i < VOLMGR_MAX_MEDIAPATHS_PER_VOLUME; i++) {
             if (!scan->media_paths[i])
                 continue;
-
+            LOGI("compare path:%s with %s",media_path,scan->media_paths[i]);
             if (fuzzy && !strncmp(media_path, scan->media_paths[i], strlen(scan->media_paths[i])))
                 return scan;
             else if (!fuzzy && !strcmp(media_path, scan->media_paths[i]))

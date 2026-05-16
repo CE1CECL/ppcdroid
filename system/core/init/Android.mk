@@ -31,3 +31,8 @@ LOCAL_STATIC_LIBRARIES := libcutils libc
 
 include $(BUILD_EXECUTABLE)
 
+ifeq ($(BOARD_USES_LIRC), true)
+LOCAL_CFLAGS := -DBOARD_USES_LIRC
+else
+LOCAL_CFLAGS :=
+endif

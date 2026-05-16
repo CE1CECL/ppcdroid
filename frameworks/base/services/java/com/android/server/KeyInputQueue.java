@@ -31,6 +31,9 @@ import android.view.WindowManagerPolicy;
 
 public abstract class KeyInputQueue {
     static final String TAG = "KeyInputQueue";
+    static final int UPKEY_KEYWORD = 19;
+    static final int DOWNKEY_KEYWORD = 20;
+
 
     SparseArray<InputDevice> mDevices = new SparseArray<InputDevice>();
     
@@ -41,6 +44,8 @@ public abstract class KeyInputQueue {
     final QueuedEvent mLast;
     QueuedEvent mCache;
     int mCacheCount;
+    int mCx;
+    int mCy;
 
     Display mDisplay = null;
     
@@ -123,6 +128,12 @@ public abstract class KeyInputQueue {
 
     public void setDisplay(Display display) {
         mDisplay = display;
+        /*
+         *Fix Me
+         * do not hard code the 20
+         */
+        mCx = (mDisplay.getWidth() - 20) / 2;
+        mCy = (mDisplay.getHeight() - 20) / 2;
     }
     
     public void getInputConfiguration(Configuration config) {
@@ -203,7 +214,7 @@ public abstract class KeyInputQueue {
                                 + " keycode=" + ev.keycode
                                 + " value=" + ev.value);
                     }
-                    
+
                     if (ev.type == RawInputEvent.EV_DEVICE_ADDED) {
                         synchronized (mFirst) {
                             di = newInputDevice(ev.deviceId);
@@ -263,7 +274,11 @@ public abstract class KeyInputQueue {
                         final int scancode = ev.scancode;
                         send = false;
                         
-                        // Is it a key event?
+			if(false){
+			    Log.i(TAG, "Device class : " + classes + "; Event type: " + type +
+				  "; Scancode: " + scancode + " Value: " + ev.value + "; keycode: " + ev.keycode);
+			}
+			// Is it a key event?
                         if (type == RawInputEvent.EV_KEY &&
                                 (classes&RawInputEvent.CLASS_KEYBOARD) != 0 &&
                                 (scancode < RawInputEvent.BTN_FIRST ||
@@ -288,11 +303,28 @@ public abstract class KeyInputQueue {
                                 di.mAbs.changed = true;
                                 di.mAbs.down = ev.value != 0;
                             }
-                            if (ev.scancode == RawInputEvent.BTN_MOUSE &&
-                                    (classes&RawInputEvent.CLASS_TRACKBALL) != 0) {
-                                di.mRel.changed = true;
-                                di.mRel.down = ev.value != 0;
-                                send = true;
+                            if (ev.scancode == RawInputEvent.BTN_MOUSE) {
+                                if ((classes&RawInputEvent.CLASS_TRACKBALL) != 0) {
+                                    di.mRel.changed = true;
+                                    di.mRel.down = ev.value != 0;
+                                } else if ((classes&RawInputEvent.CLASS_MOUSE) != 0) {
+                                    di.mAbs.changed = true;
+                                    di.mAbs.down=ev.value != 0;
+                                }
+                            } else if (ev.scancode == RawInputEvent.BTN_RIGHT) {
+                                if ((classes&RawInputEvent.CLASS_MOUSE) != 0) {
+                                    boolean down = (ev.value != 0);
+                                    if (down) {
+                                        di.mDownTime = curTime;
+                                    }
+
+                                    addLocked(di, curTime, ev.flags,
+                                        RawInputEvent.CLASS_KEYBOARD,
+                                        newKeyEvent(di, di.mDownTime, curTime, down,
+                                            KeyEvent.KEYCODE_MENU, 0, scancode,
+                                            ((ev.flags & WindowManagerPolicy.FLAG_WOKE_HERE) != 0)
+                                            ? KeyEvent.FLAG_WOKE_HERE : 0));
+                                }
                             }
     
                         } else if (ev.type == RawInputEvent.EV_ABS &&
@@ -310,25 +342,77 @@ public abstract class KeyInputQueue {
                                 di.mAbs.changed = true;
                                 di.mAbs.size = ev.value;
                             }
-    
-                        } else if (ev.type == RawInputEvent.EV_REL &&
-                                (classes&RawInputEvent.CLASS_TRACKBALL) != 0) {
-                            // Add this relative movement into our totals.
-                            if (ev.scancode == RawInputEvent.REL_X) {
-                                di.mRel.changed = true;
-                                di.mRel.x += ev.value;
-                            } else if (ev.scancode == RawInputEvent.REL_Y) {
-                                di.mRel.changed = true;
-                                di.mRel.y += ev.value;
-                            }
-                        }
-                        
+                        } else if (ev.type == RawInputEvent.EV_REL ) {
+			    if ((classes&RawInputEvent.CLASS_TRACKBALL) != 0) {
+                                // Add this relative movement into our totals.
+                                if (ev.scancode == RawInputEvent.REL_X) {
+                                    di.mRel.changed = true;
+                                    di.mRel.x += ev.value;
+                                } else if (ev.scancode == RawInputEvent.REL_Y) {
+                                    di.mRel.changed = true;
+                                    di.mRel.y += ev.value;
+                                }
+                            } else if ((classes&RawInputEvent.CLASS_MOUSE) != 0) {
+				// Log.i(TAG, "Reaches Mouse X,Y code");
+				if (ev.scancode == RawInputEvent.REL_X) {
+				    di.mAbs.changed = true;
+				    mCx = mCx + (int)ev.value;
+				    mCx = ((mCx < 0) ? 0 :(mCx >= mDisplay.getWidth() ?(mDisplay.getWidth()-1):mCx));
+				    di.mAbs.x = mCx;
+				} else if (ev.scancode == RawInputEvent.REL_Y) {
+				    di.mAbs.changed = true;
+				    mCy = mCy + (int)ev.value;
+				    mCy = ((mCy < 0) ? 0 :(mCy >= mDisplay.getHeight()?(mDisplay.getHeight() - 1):mCy));
+				    di.mAbs.y = mCy;
+				} else if ((classes&RawInputEvent.CLASS_MOUSE)  != 0) {
+				    // Log.i(TAG,"Reaches Mouse Wheel code");
+				    if (ev.scancode == RawInputEvent.REL_WHEEL){
+					boolean down;
+					int keycode;
+					if (ev.value != 0) {
+					    down = true;
+					    di.mDownTime = curTime;
+					}
+					else {
+					    down = false;
+					}
+					if (ev.value < 0){
+					    keycode = rotateKeyCodeLocked(DOWNKEY_KEYWORD);
+					} else if(ev.value > 0){
+					    keycode = rotateKeyCodeLocked(UPKEY_KEYWORD);
+					} else {
+					    keycode = rotateKeyCodeLocked(ev.keycode);
+					}
+					addLocked(di, curTime, ev.flags,
+						  RawInputEvent.CLASS_KEYBOARD,
+						  newKeyEvent(di, di.mDownTime, curTime, down,
+							      keycode, 0, scancode,
+							      ((ev.flags & WindowManagerPolicy.FLAG_WOKE_HERE) != 0)
+							      ? KeyEvent.FLAG_WOKE_HERE : 0));
+					addLocked(di, curTime, ev.flags,
+						  RawInputEvent.CLASS_KEYBOARD,
+						  newKeyEvent(di, di.mDownTime, curTime, !down,
+							      keycode, 0, scancode,
+							      ((ev.flags & WindowManagerPolicy.FLAG_WOKE_HERE) != 0)
+							      ? KeyEvent.FLAG_WOKE_HERE : 0));
+				    }
+				}
+			    }
+			} else if (ev.type == RawInputEvent.EV_TS) {
+                            di.mAbs.x = ev.x;
+                            di.mAbs.y = ev.y;
+                            di.mAbs.pressure = ev.pressure;
+                            di.mAbs.down = ev.pressure != 0;// simulate
+                                                            // key down on
+                                                            // pressure
+                            di.mAbs.changed = true;
+                            send = true;
+			}
                         if (send || ev.type == RawInputEvent.EV_SYN) {
                             if (mDisplay != null) {
                                 if (!mHaveGlobalMetaState) {
                                     computeGlobalMetaStateLocked();
                                 }
-                                
                                 MotionEvent me;
                                 me = di.mAbs.generateMotion(di, curTime, true,
                                         mDisplay, mOrientation, mGlobalMetaState);
@@ -338,8 +422,13 @@ public abstract class KeyInputQueue {
                                     if (WindowManagerPolicy.WATCH_POINTER) {
                                         Log.i(TAG, "Enqueueing: " + me);
                                     }
-                                    addLocked(di, curTime, ev.flags,
-                                            RawInputEvent.CLASS_TOUCHSCREEN, me);
+                                    if ((classes & RawInputEvent.CLASS_TOUCHSCREEN) != 0) {
+                                        addLocked(di, curTime, ev.flags,
+                                                RawInputEvent.CLASS_TOUCHSCREEN, me);
+                                    } else if ((classes & RawInputEvent.CLASS_MOUSE) != 0) {
+                                        addLocked(di, curTime, ev.flags,
+                                                RawInputEvent.CLASS_MOUSE, me);
+                                    }
                                 }
                                 me = di.mRel.generateMotion(di, curTime, false,
                                         mDisplay, mOrientation, mGlobalMetaState);

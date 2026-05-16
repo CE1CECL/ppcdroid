@@ -44027,7 +44027,7 @@ case OP_SetNumColumns: {
 ** the result.
 */
 case OP_Column: {
-  u32 payloadSize;   /* Number of bytes in the record */
+  u32 payloadSize =0;/* Number of bytes in the record */
   int p1 = pOp->p1;  /* P1 value of the opcode */
   int p2 = pOp->p2;  /* column number to retrieve */
   Cursor *pC = 0;    /* The VDBE cursor */
@@ -44079,7 +44079,7 @@ case OP_Column: {
       payloadSize = pC->payloadSize;
       zRec = (char*)pC->aRow;
     }else if( pC->isIndex ){
-      i64 payloadSize64;
+      i64 payloadSize64 = 0;
       sqlite3BtreeKeySize(pCrsr, &payloadSize64);
       payloadSize = payloadSize64;
     }else{
@@ -44119,7 +44119,7 @@ case OP_Column: {
     u8 *zEndHdr;     /* Pointer to first byte after the header */
     u32 offset;      /* Offset into the data */
     int szHdrSz;     /* Size of the header size field at start of record */
-    int avail;       /* Number of bytes of available data */
+    int avail = 0;   /* Number of bytes of available data */
 
     assert(aType);
     pC->aOffset = aOffset = &aType[nField];
@@ -45651,7 +45651,7 @@ case OP_RowData: {
   int i = pOp->p1;
   Cursor *pC;
   BtCursor *pCrsr;
-  u32 n;
+  u32 n = 0;
 
   pOut = &p->aMem[pOp->p2];
 
@@ -45668,7 +45668,7 @@ case OP_RowData: {
   rc = sqlite3VdbeCursorMoveto(pC);
   if( rc ) goto abort_due_to_error;
   if( pC->isIndex ){
-    i64 n64;
+    i64 n64 = 0;
     assert( !pC->isTable );
     sqlite3BtreeKeySize(pCrsr, &n64);
     if( n64>db->aLimit[SQLITE_LIMIT_LENGTH] ){
@@ -45704,7 +45704,7 @@ case OP_RowData: {
 case OP_Rowid: {                 /* out2-prerelease */
   int i = pOp->p1;
   Cursor *pC;
-  i64 v;
+  i64 v = 0;
 
   assert( i>=0 && i<p->nCursor );
   pC = p->apCsr[i];
@@ -45758,7 +45758,7 @@ case OP_Last: {        /* jump */
   int i = pOp->p1;
   Cursor *pC;
   BtCursor *pCrsr;
-  int res;
+  int res = 0;
 
   assert( i>=0 && i<p->nCursor );
   pC = p->apCsr[i];

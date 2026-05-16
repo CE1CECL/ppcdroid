@@ -19,6 +19,7 @@
 #include "Dalvik.h"
 #include "JniInternal.h"
 
+
 #include <stdlib.h>
 #include <stdarg.h>
 #include <limits.h>
@@ -258,11 +259,11 @@ void dvmCallJNIMethod(const u4* args, JValue* pResult, const Method* method,
 
     assert(method->insns != NULL);
 
-    //int i;
-    //LOGI("JNI calling %p (%s.%s %s):\n", method->insns,
-    //    method->clazz->descriptor, method->name, method->signature);
-    //for (i = 0; i < method->insSize; i++)
-    //    LOGI("  %d: 0x%08x\n", i, args[i]);
+    int i;
+//    LOGI("JNI calling %p (%s.%s %s):\n", method->insns,
+//        method->clazz->descriptor, method->name, method->shorty);
+//   for (i = 0; i < method->insSize; i++)
+//       LOGI("  %d: 0x%08x\n", i, args[i]);
 
     oldStatus = dvmChangeStatus(self, THREAD_NATIVE);
 
@@ -1060,6 +1061,20 @@ void dvmReleaseJniMonitors(Thread* self)
 }
 
 #ifdef WITH_JNI_STACK_CHECK
+
+/* stupid fake crc */
+static u4 dvmInitCrc32(void)
+{
+	return (u4)-1;
+}
+
+static u4 dvmComputeCrc32(u4 crc, const u1 *p, int cnt)
+{
+	while (cnt-- > 0)
+		crc += *p++;
+	return crc;
+}
+
 /*
  * Compute a CRC on the entire interpreted stack.
  *
@@ -1957,10 +1972,17 @@ SET_TYPE_FIELD(jdouble, Double);
         return _retok;                                                      \
     }
 CALL_VIRTUAL(jobject, Object, NULL, result.l, true);
+#if __BYTE_ORDER == __BIG_ENDIAN
+CALL_VIRTUAL(jboolean, Boolean, 0, result.zz[3], false);
+CALL_VIRTUAL(jbyte, Byte, 0, result.bb[3], false);
+CALL_VIRTUAL(jchar, Char, 0, result.cc[1], false);
+CALL_VIRTUAL(jshort, Short, 0, result.ss[1], false);
+#else
 CALL_VIRTUAL(jboolean, Boolean, 0, result.z, false);
 CALL_VIRTUAL(jbyte, Byte, 0, result.b, false);
 CALL_VIRTUAL(jchar, Char, 0, result.c, false);
 CALL_VIRTUAL(jshort, Short, 0, result.s, false);
+#endif
 CALL_VIRTUAL(jint, Int, 0, result.i, false);
 CALL_VIRTUAL(jlong, Long, 0, result.j, false);
 CALL_VIRTUAL(jfloat, Float, 0.0f, result.f, false);
@@ -2036,10 +2058,17 @@ CALL_VIRTUAL(void, Void, , , false);
         return _retok;                                                      \
     }
 CALL_NONVIRTUAL(jobject, Object, NULL, result.l, true);
+#if __BYTE_ORDER == __BIG_ENDIAN
+CALL_NONVIRTUAL(jboolean, Boolean, 0, result.zz[3], false);
+CALL_NONVIRTUAL(jbyte, Byte, 0, result.bb[3], false);
+CALL_NONVIRTUAL(jchar, Char, 0, result.cc[1], false);
+CALL_NONVIRTUAL(jshort, Short, 0, result.ss[1], false);
+#else
 CALL_NONVIRTUAL(jboolean, Boolean, 0, result.z, false);
 CALL_NONVIRTUAL(jbyte, Byte, 0, result.b, false);
 CALL_NONVIRTUAL(jchar, Char, 0, result.c, false);
 CALL_NONVIRTUAL(jshort, Short, 0, result.s, false);
+#endif
 CALL_NONVIRTUAL(jint, Int, 0, result.i, false);
 CALL_NONVIRTUAL(jlong, Long, 0, result.j, false);
 CALL_NONVIRTUAL(jfloat, Float, 0.0f, result.f, false);
@@ -2091,10 +2120,17 @@ CALL_NONVIRTUAL(void, Void, , , false);
         return _retok;                                                      \
     }
 CALL_STATIC(jobject, Object, NULL, result.l, true);
+#if __BYTE_ORDER == __BIG_ENDIAN
+CALL_STATIC(jboolean, Boolean, 0, result.zz[3], false);
+CALL_STATIC(jbyte, Byte, 0, result.bb[3], false);
+CALL_STATIC(jchar, Char, 0, result.cc[1], false);
+CALL_STATIC(jshort, Short, 0, result.ss[1], false);
+#else
 CALL_STATIC(jboolean, Boolean, 0, result.z, false);
 CALL_STATIC(jbyte, Byte, 0, result.b, false);
 CALL_STATIC(jchar, Char, 0, result.c, false);
 CALL_STATIC(jshort, Short, 0, result.s, false);
+#endif
 CALL_STATIC(jint, Int, 0, result.i, false);
 CALL_STATIC(jlong, Long, 0, result.j, false);
 CALL_STATIC(jfloat, Float, 0.0f, result.f, false);

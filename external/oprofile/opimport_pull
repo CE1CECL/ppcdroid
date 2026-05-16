@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4 -E
+#!/usr/bin/python -E
 
 import os
 import re

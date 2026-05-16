@@ -475,6 +475,22 @@ TCGv tcg_const_i64(int64_t val)
     return t0;
 }
 
+TCGv_i32 tcg_const_local_i32(int32_t val)
+{
+    TCGv_i32 t0;
+    t0 = tcg_temp_local_new_i32();
+    tcg_gen_movi_i32(t0, val);
+    return t0;
+}
+
+TCGv_i64 tcg_const_local_i64(int64_t val)
+{
+    TCGv_i64 t0;
+    t0 = tcg_temp_local_new_i64();
+    tcg_gen_movi_i64(t0, val);
+    return t0;
+}
+
 void tcg_register_helper(void *func, const char *name)
 {
     TCGContext *s = &tcg_ctx;
@@ -1988,6 +2004,39 @@ static inline int tcg_gen_code_common(TCGContext *s, uint8_t *gen_code_buf,
     }
  the_end:
     return -1;
+}
+
+int tcg_gen_code(TCGContext *s, uint8_t *gen_code_buf)
+{
+#ifdef CONFIG_PROFILER
+    {
+        int n;
+        n = (gen_opc_ptr - gen_opc_buf);
+        s->op_count += n;
+        if (n > s->op_count_max)
+            s->op_count_max = n;
+
+        s->temp_count += s->nb_temps;
+        if (s->nb_temps > s->temp_count_max)
+            s->temp_count_max = s->nb_temps;
+    }
+#endif
+
+    tcg_gen_code_common(s, gen_code_buf, -1);
+
+    /* flush instruction cache */
+    flush_icache_range((unsigned long)gen_code_buf, 
+                       (unsigned long)s->code_ptr);
+    return s->code_ptr -  gen_code_buf;
+}
+
+/* Return the index of the micro operation such as the pc after is <
+   offset bytes from the start of the TB.  The contents of gen_code_buf must
+   not be changed, though writing the same values is ok.
+   Return -1 if not found. */
+int tcg_gen_code_search_pc(TCGContext *s, uint8_t *gen_code_buf, long offset)
+{
+    return tcg_gen_code_common(s, gen_code_buf, offset);
 }
 
 int dyngen_code(TCGContext *s, uint8_t *gen_code_buf)

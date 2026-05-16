@@ -12,6 +12,10 @@ LOCAL_CFLAGS =   -O2 -Wall -DCONFIG_YAFFS_UTIL
 LOCAL_CFLAGS+=   -Wshadow -Wpointer-arith -Wwrite-strings -Wstrict-prototypes -Wmissing-declarations
 LOCAL_CFLAGS+=   -Wmissing-prototypes -Wredundant-decls -Wnested-externs -Winline
 
+ifeq ($(TARGET_ARCH), ppc)
+LOCAL_CFLAGS += -DHAVE_BIG_ENDIAN
+endif
+
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/yaffs2
 
 LOCAL_MODULE := mkyaffs2image

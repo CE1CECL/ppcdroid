@@ -3357,7 +3357,7 @@ static jobject osNetworkSystem_inheritedChannelImpl(JNIEnv* env, jobject obj) {
         remote_addr.sin_port = 0;
         remote_addr.sin_addr.s_addr = 0;
         address = (jbyte*) malloc(sizeof(jbyte)*4);
-        bzero(address, sizeof(jbyte)*4);
+        memset(address, 0, sizeof(jbyte)*4);
     } else {
         if (AF_INET != remote_addr.sin_family
                 || length != sizeof(struct sockaddr)) {

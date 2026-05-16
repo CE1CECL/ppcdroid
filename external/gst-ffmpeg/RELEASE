@@ -1,0 +1,72 @@
+
+Release notes for GStreamer FFmpeg Plug-ins 0.10.7 "Some high ground is not worth taking"
+        
+
+The GStreamer team is proud to announce a new release
+in the 0.10.x stable series of the
+GStreamer FFmpeg Plug-ins.
+
+
+The 0.10.x series is a stable series targeted at end users.
+It is not API or ABI compatible with the stable 0.8.x series.
+It is, however, parallel installable with the 0.8.x series.
+
+
+This module contains plug-ins using libraries from the FFmpeg project.
+
+
+
+Other modules containing plug-ins are:
+
+
+gst-plugins-base
+contains a basic set of well-supported plug-ins
+gst-plugins-ugly
+contains a set of well-supported plug-ins, but might pose problems for
+    distributors
+gst-plugins-bad
+contains a set of less supported plug-ins that haven't passed the
+    rigorous quality testing we expect
+
+
+
+  
+
+Features of this release
+    
+      * Update to ffmpeg 0.5 release
+      * Support channel layouts for multichannel audio
+      * Add mappings for new codecs: Real Video 3.0, EAC3, QCELP, IMC, MLP and more
+      * Support push-based demuxers
+      * Expose preload and maxdelay muxer properties
+There were no bugs fixed in this release
+    
+
+Download
+
+You can find source releases of gst-ffmpeg in the download directory:
+http://gstreamer.freedesktop.org/src/gst-ffmpeg/
+
+GStreamer Homepage
+
+More details can be found on the project's website:
+http://gstreamer.freedesktop.org/
+
+Support and Bugs
+
+We use GNOME's bugzilla for bug reports and feature requests:
+http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer
+
+Developers
+
+GStreamer is stored in Git, hosted at git.freedesktop.org, and can be cloned from there.
+Interested developers of the core library, plug-ins, and applications should
+subscribe to the gstreamer-devel list. If there is sufficient interest we
+will create more lists as necessary.
+
+        
+Applications
+  
+Contributors to this release
+    
+ 

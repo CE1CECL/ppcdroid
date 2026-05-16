@@ -48,16 +48,16 @@ public class SoundAndDisplaySettings extends PreferenceActivity implements
     private static final int FALLBACK_EMERGENCY_TONE_VALUE = 0;
     
     private static final String KEY_SILENT = "silent";
-    private static final String KEY_VIBRATE = "vibrate";
+    //private static final String KEY_VIBRATE = "vibrate";
     private static final String KEY_SCREEN_TIMEOUT = "screen_timeout";
-    private static final String KEY_DTMF_TONE = "dtmf_tone";
+    //private static final String KEY_DTMF_TONE = "dtmf_tone";
     private static final String KEY_SOUND_EFFECTS = "sound_effects";
     private static final String KEY_ANIMATIONS = "animations";
-    private static final String KEY_ACCELEROMETER = "accelerometer";
+    //private static final String KEY_ACCELEROMETER = "accelerometer";
     private static final String KEY_PLAY_MEDIA_NOTIFICATION_SOUNDS = "play_media_notification_sounds";
-    private static final String KEY_EMERGENCY_TONE ="emergency_tone";
+    //private static final String KEY_EMERGENCY_TONE ="emergency_tone";
     
-    private CheckBoxPreference mSilent;
+    //private CheckBoxPreference mSilent;
 
     private CheckBoxPreference mPlayMediaNotificationSounds;
 
@@ -70,11 +70,11 @@ public class SoundAndDisplaySettings extends PreferenceActivity implements
      * Otherwise, it will adjust the normal ringer mode's ring or ring+vibrate
      * setting.
      */
-    private CheckBoxPreference mVibrate;
-    private CheckBoxPreference mDtmfTone;
+    //private CheckBoxPreference mVibrate;
+    //private CheckBoxPreference mDtmfTone;
     private CheckBoxPreference mSoundEffects;
     private CheckBoxPreference mAnimations;
-    private CheckBoxPreference mAccelerometer;
+    //private CheckBoxPreference mAccelerometer;
     private float[] mAnimationScales;
     
     private AudioManager mAudioManager;
@@ -101,27 +101,27 @@ public class SoundAndDisplaySettings extends PreferenceActivity implements
         
         addPreferencesFromResource(R.xml.sound_and_display_settings);
         
-        if (TelephonyManager.PHONE_TYPE_CDMA != activePhoneType) {
+        //if (TelephonyManager.PHONE_TYPE_CDMA != activePhoneType) {
             // device is not CDMA, do not display CDMA emergency_tone
-            getPreferenceScreen().removePreference(findPreference(KEY_EMERGENCY_TONE));
-         }
+        //    getPreferenceScreen().removePreference(findPreference(KEY_EMERGENCY_TONE));
+        //}
 
-        mSilent = (CheckBoxPreference) findPreference(KEY_SILENT);
+        //mSilent = (CheckBoxPreference) findPreference(KEY_SILENT);
         mPlayMediaNotificationSounds = (CheckBoxPreference) findPreference(KEY_PLAY_MEDIA_NOTIFICATION_SOUNDS);
 
-        mVibrate = (CheckBoxPreference) findPreference(KEY_VIBRATE);
-        mDtmfTone = (CheckBoxPreference) findPreference(KEY_DTMF_TONE);
-        mDtmfTone.setPersistent(false);
-        mDtmfTone.setChecked(Settings.System.getInt(resolver,
-                Settings.System.DTMF_TONE_WHEN_DIALING, 1) != 0);
+        //mVibrate = (CheckBoxPreference) findPreference(KEY_VIBRATE);
+        //mDtmfTone = (CheckBoxPreference) findPreference(KEY_DTMF_TONE);
+        //mDtmfTone.setPersistent(false);
+        //mDtmfTone.setChecked(Settings.System.getInt(resolver,
+        //        Settings.System.DTMF_TONE_WHEN_DIALING, 1) != 0);
         mSoundEffects = (CheckBoxPreference) findPreference(KEY_SOUND_EFFECTS);
         mSoundEffects.setPersistent(false);
         mSoundEffects.setChecked(Settings.System.getInt(resolver,
                 Settings.System.SOUND_EFFECTS_ENABLED, 0) != 0);
         mAnimations = (CheckBoxPreference) findPreference(KEY_ANIMATIONS);
         mAnimations.setPersistent(false);
-        mAccelerometer = (CheckBoxPreference) findPreference(KEY_ACCELEROMETER);
-        mAccelerometer.setPersistent(false);
+        //mAccelerometer = (CheckBoxPreference) findPreference(KEY_ACCELEROMETER);
+        //mAccelerometer.setPersistent(false);
         
         ListPreference screenTimeoutPreference =
             (ListPreference) findPreference(KEY_SCREEN_TIMEOUT);
@@ -129,13 +129,13 @@ public class SoundAndDisplaySettings extends PreferenceActivity implements
                 resolver, SCREEN_OFF_TIMEOUT, FALLBACK_SCREEN_TIMEOUT_VALUE)));
         screenTimeoutPreference.setOnPreferenceChangeListener(this);
 
-        if (TelephonyManager.PHONE_TYPE_CDMA == activePhoneType) {
-            ListPreference emergencyTonePreference =
-                (ListPreference) findPreference(KEY_EMERGENCY_TONE);
-            emergencyTonePreference.setValue(String.valueOf(Settings.System.getInt(
-                resolver, Settings.System.EMERGENCY_TONE, FALLBACK_EMERGENCY_TONE_VALUE)));
-            emergencyTonePreference.setOnPreferenceChangeListener(this);
-        }
+        //if (TelephonyManager.PHONE_TYPE_CDMA == activePhoneType) {
+        //    ListPreference emergencyTonePreference =
+        //        (ListPreference) findPreference(KEY_EMERGENCY_TONE);
+        //    emergencyTonePreference.setValue(String.valueOf(Settings.System.getInt(
+        //        resolver, Settings.System.EMERGENCY_TONE, FALLBACK_EMERGENCY_TONE_VALUE)));
+        //    emergencyTonePreference.setOnPreferenceChangeListener(this);
+        //}
     }
     
     @Override
@@ -160,9 +160,9 @@ public class SoundAndDisplaySettings extends PreferenceActivity implements
         final boolean silentOrVibrateMode =
                 ringerMode != AudioManager.RINGER_MODE_NORMAL;
         
-        if (silentOrVibrateMode != mSilent.isChecked() || force) {
-            mSilent.setChecked(silentOrVibrateMode);
-        }
+        //if (silentOrVibrateMode != mSilent.isChecked() || force) {
+        //    mSilent.setChecked(silentOrVibrateMode);
+        //}
 
         try {
             mPlayMediaNotificationSounds.setChecked(mMountService.getPlayNotificationSounds());
@@ -176,16 +176,16 @@ public class SoundAndDisplaySettings extends PreferenceActivity implements
             vibrateSetting = mAudioManager.getVibrateSetting(AudioManager.VIBRATE_TYPE_RINGER)
                     == AudioManager.VIBRATE_SETTING_ON;            
         }
-        if (vibrateSetting != mVibrate.isChecked() || force) {
-            mVibrate.setChecked(vibrateSetting);
-        }
+        //if (vibrateSetting != mVibrate.isChecked() || force) {
+        //    mVibrate.setChecked(vibrateSetting);
+        //}
         
         int silentModeStreams = Settings.System.getInt(getContentResolver(),
                 Settings.System.MODE_RINGER_STREAMS_AFFECTED, 0);
         boolean isAlarmInclSilentMode = (silentModeStreams & (1 << AudioManager.STREAM_ALARM)) != 0; 
-        mSilent.setSummary(isAlarmInclSilentMode ?
-                R.string.silent_mode_incl_alarm_summary :
-                R.string.silent_mode_summary);
+        //mSilent.setSummary(isAlarmInclSilentMode ?
+        //        R.string.silent_mode_incl_alarm_summary :
+        //        R.string.silent_mode_summary);
         
         boolean animations = true;
         try {
@@ -205,9 +205,9 @@ public class SoundAndDisplaySettings extends PreferenceActivity implements
         if (animations != mAnimations.isChecked() || force) {
             mAnimations.setChecked(animations);
         }
-        mAccelerometer.setChecked(Settings.System.getInt(
-                getContentResolver(), 
-                Settings.System.ACCELEROMETER_ROTATION, 0) != 0);
+        //mAccelerometer.setChecked(Settings.System.getInt(
+        //        getContentResolver(),
+        //        Settings.System.ACCELEROMETER_ROTATION, 0) != 0);
     }
 
     private void setRingerMode(boolean silent, boolean vibrate) {
@@ -225,18 +225,11 @@ public class SoundAndDisplaySettings extends PreferenceActivity implements
     @Override
     public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
 
-        if (preference == mSilent || preference == mVibrate) {
-            setRingerMode(mSilent.isChecked(), mVibrate.isChecked());
-            if (preference == mSilent) updateState(false);
-        } else if (preference == mPlayMediaNotificationSounds) {
+        if (preference == mPlayMediaNotificationSounds) {
             try {
                 mMountService.setPlayNotificationSounds(mPlayMediaNotificationSounds.isChecked());
             } catch (RemoteException e) {
             }
-        } else if (preference == mDtmfTone) {
-            Settings.System.putInt(getContentResolver(), Settings.System.DTMF_TONE_WHEN_DIALING,
-                    mDtmfTone.isChecked() ? 1 : 0);
-            
         } else if (preference == mSoundEffects) {
             if (mSoundEffects.isChecked()) {
                 mAudioManager.loadSoundEffects();
@@ -259,10 +252,10 @@ public class SoundAndDisplaySettings extends PreferenceActivity implements
             } catch (RemoteException e) {
             }
             
-        } else if (preference == mAccelerometer) {
-            Settings.System.putInt(getContentResolver(),
-                    Settings.System.ACCELEROMETER_ROTATION,
-                    mAccelerometer.isChecked() ? 1 : 0);
+        //} else if (preference == mAccelerometer) {
+        //    Settings.System.putInt(getContentResolver(),
+        //            Settings.System.ACCELEROMETER_ROTATION,
+        //            mAccelerometer.isChecked() ? 1 : 0);
         }
         return true;
     }
@@ -276,14 +269,14 @@ public class SoundAndDisplaySettings extends PreferenceActivity implements
             } catch (NumberFormatException e) {
                 Log.e(TAG, "could not persist screen timeout setting", e);
             }
-        } else if (KEY_EMERGENCY_TONE.equals(preference.getKey())) {
-            int value = Integer.parseInt((String) objValue);
-            try {
-                Settings.System.putInt(getContentResolver(),
-                        Settings.System.EMERGENCY_TONE, value);
-            } catch (NumberFormatException e) {
-                Log.e(TAG, "could not persist emergency tone setting", e);
-            }
+        //} else if (KEY_EMERGENCY_TONE.equals(preference.getKey())) {
+        //    int value = Integer.parseInt((String) objValue);
+        //    try {
+        //        Settings.System.putInt(getContentResolver(),
+        //                Settings.System.EMERGENCY_TONE, value);
+        //    } catch (NumberFormatException e) {
+        //        Log.e(TAG, "could not persist emergency tone setting", e);
+        //    }
         }
         
         return true;

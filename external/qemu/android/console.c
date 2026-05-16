@@ -230,7 +230,7 @@ static void  control_control_write( ControlClient  client, const char*  buff, in
         ret = socket_send( client->sock, buff, len);
 #endif
         if (ret < 0) {
-            if (errno != EINTR && errno != EWOULDBLOCK)
+            if (errno != EINTR && errno != EAGAIN && errno != EWOULDBLOCK)
                 return;
         } else {
             buff += ret;
@@ -495,8 +495,8 @@ control_client_read( void*  _client )
 #endif
     if (size < 0) {
         D(( "size < 0, exiting with %d: %s\n", errno, errno_str ));
-		if (errno != EWOULDBLOCK && errno != EINTR)
-			control_client_destroy( client );
+        if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
+            control_client_destroy( client );
         return;
     }
 
@@ -1501,13 +1501,16 @@ do_control_write(void* data, const char* string)
 static int
 do_power_display( ControlClient client, char*  args )
 {
+#ifdef TARGET_ARM
     goldfish_battery_display(do_control_write, client);
+#endif
     return 0;
 }
 
 static int
 do_ac_state( ControlClient  client, char*  args )
 {
+#ifdef TARGET_ARM
     if (args) {
         if (strcasecmp(args, "on") == 0) {
             goldfish_battery_set_prop(1, POWER_SUPPLY_PROP_ONLINE, 1);
@@ -1520,12 +1523,14 @@ do_ac_state( ControlClient  client, char*  args )
     }
 
     control_write( client, "KO: Usage: \"ac on\" or \"ac off\"\n" );
+#endif
     return -1;
 }
 
 static int
 do_battery_status( ControlClient  client, char*  args )
 {
+#ifdef TARGET_ARM
     if (args) {
         if (strcasecmp(args, "unknown") == 0) {
             goldfish_battery_set_prop(0, POWER_SUPPLY_PROP_STATUS, POWER_SUPPLY_STATUS_UNKNOWN);
@@ -1550,12 +1555,14 @@ do_battery_status( ControlClient  client, char*  args )
     }
 
     control_write( client, "KO: Usage: \"status unknown|charging|discharging|not-charging|full\"\n" );
+#endif
     return -1;
 }
 
 static int
 do_battery_present( ControlClient  client, char*  args )
 {
+#ifdef TARGET_ARM
     if (args) {
         if (strcasecmp(args, "true") == 0) {
             goldfish_battery_set_prop(0, POWER_SUPPLY_PROP_PRESENT, 1);
@@ -1568,12 +1575,14 @@ do_battery_present( ControlClient  client, char*  args )
     }
 
     control_write( client, "KO: Usage: \"present true\" or \"present false\"\n" );
+#endif
     return -1;
 }
 
 static int
 do_battery_health( ControlClient  client, char*  args )
 {
+#ifdef TARGET_ARM
     if (args) {
         if (strcasecmp(args, "unknown") == 0) {
             goldfish_battery_set_prop(0, POWER_SUPPLY_PROP_HEALTH, POWER_SUPPLY_HEALTH_UNKNOWN);
@@ -1602,12 +1611,14 @@ do_battery_health( ControlClient  client, char*  args )
     }
 
     control_write( client, "KO: Usage: \"health unknown|good|overheat|dead|overvoltage|failure\"\n" );
+#endif
     return -1;
 }
 
 static int
 do_battery_capacity( ControlClient  client, char*  args )
 {
+#ifdef TARGET_ARM
     if (args) {
         int capacity;
 
@@ -1618,6 +1629,7 @@ do_battery_capacity( ControlClient  client, char*  args )
     }
 
     control_write( client, "KO: Usage: \"capacity <percentage>\"\n" );
+#endif
     return -1;
 }
 

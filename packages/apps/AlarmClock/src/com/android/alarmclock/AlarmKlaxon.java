@@ -48,9 +48,9 @@ class AlarmKlaxon implements Alarms.AlarmSettings {
     private int mAlarmId;
     private String mAlert;
     private Alarms.DaysOfWeek mDaysOfWeek;
-    private boolean mVibrate;
+    //private boolean mVibrate;
     private boolean mPlaying = false;
-    private Vibrator mVibrator;
+    //private Vibrator mVibrator;
     private MediaPlayer mMediaPlayer;
     private KillerCallback mKillerCallback;
 
@@ -76,7 +76,7 @@ class AlarmKlaxon implements Alarms.AlarmSettings {
     };
 
     AlarmKlaxon() {
-        mVibrator = new Vibrator();
+    //    mVibrator = new Vibrator();
     }
 
     public void reportAlarm(
@@ -87,7 +87,7 @@ class AlarmKlaxon implements Alarms.AlarmSettings {
                             " " + minutes + " dow " + daysOfWeek);
         mAlert = alert;
         mDaysOfWeek = daysOfWeek;
-        mVibrate = vibrate;
+        //mVibrate = vibrate;
     }
 
     public void postPlay(final Context context, final int alarmId) {
@@ -153,11 +153,11 @@ class AlarmKlaxon implements Alarms.AlarmSettings {
         }
 
         /* Start the vibrator after everything is ok with the media player */
-        if (mVibrate) {
-            mVibrator.vibrate(sVibratePattern, 0);
-        } else {
-            mVibrator.cancel();
-        }
+        //if (mVibrate) {
+        //    mVibrator.vibrate(sVibratePattern, 0);
+        //} else {
+        //    mVibrator.cancel();
+        //}
 
         enableKiller();
         mPlaying = true;
@@ -200,7 +200,7 @@ class AlarmKlaxon implements Alarms.AlarmSettings {
             }
 
             // Stop vibrator
-            mVibrator.cancel();
+            //mVibrator.cancel();
 
             /* disable alarm only if it is not set to repeat */
             if (!snoozed && ((mDaysOfWeek == null || !mDaysOfWeek.isRepeatSet()))) {

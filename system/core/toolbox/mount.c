@@ -91,7 +91,6 @@ parse_mount_options(char *arg, unsigned long rwflag, struct extra_opts *extra, i
 {
 	char *s;
     
-    *loop = 0;
 	while ((s = strsep(&arg, ",")) != NULL) {
 		char *opt = s;
 		unsigned int i;

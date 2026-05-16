@@ -28,6 +28,7 @@
                 android:targetClass="com.android.settings.WirelessSettings" />
         </PreferenceScreen>
 
+        <!--
         <PreferenceScreen
             android:key="call_settings"
             android:title="@string/call_settings_title"
@@ -37,6 +38,7 @@
                 android:targetPackage="com.android.phone"
                 android:targetClass="com.android.phone.CallFeaturesSetting" />
         </PreferenceScreen>
+        -->
 
         <!-- Sound and Display -->
         
@@ -132,6 +134,8 @@
 
         <!-- Accessibility feedback -->
 
+
+<!--
         <PreferenceScreen
             android:title="@string/accessibility_settings_title"
             android:summary="@string/accessibility_settings_summary">
@@ -140,6 +144,7 @@
                 android:targetPackage="com.android.settings"
                 android:targetClass="com.android.settings.AccessibilitySettings" />
         </PreferenceScreen>
+-->
 
         <!-- Text-To-Speech -->
         

@@ -1,0 +1,17 @@
+*.[oa]
+*.l[oa]
+.deps
+.libs
+*.in
+*~
+
+INSTALL
+Makefile
+aclocal.m4
+autom4te.cache
+autoregen.sh
+config.*
+config/
+configure
+libtool
+stamp-h1

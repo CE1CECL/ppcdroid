@@ -54,9 +54,9 @@ public class SpareParts extends PreferenceActivity
     private static final String WINDOW_ANIMATIONS_PREF = "window_animations";
     private static final String TRANSITION_ANIMATIONS_PREF = "transition_animations";
     private static final String FANCY_IME_ANIMATIONS_PREF = "fancy_ime_animations";
-    private static final String HAPTIC_FEEDBACK_PREF = "haptic_feedback";
+    //private static final String HAPTIC_FEEDBACK_PREF = "haptic_feedback";
     private static final String FONT_SIZE_PREF = "font_size";
-    private static final String END_BUTTON_PREF = "end_button";
+    //private static final String END_BUTTON_PREF = "end_button";
     private static final String MAPS_COMPASS_PREF = "maps_compass";
     private static final String KEY_COMPATIBILITY_MODE = "compatibility_mode";
 
@@ -65,9 +65,9 @@ public class SpareParts extends PreferenceActivity
     private ListPreference mWindowAnimationsPref;
     private ListPreference mTransitionAnimationsPref;
     private CheckBoxPreference mFancyImeAnimationsPref;
-    private CheckBoxPreference mHapticFeedbackPref;
+    //private CheckBoxPreference mHapticFeedbackPref;
     private ListPreference mFontSizePref;
-    private ListPreference mEndButtonPref;
+    //private ListPreference mEndButtonPref;
     private CheckBoxPreference mShowMapsCompassPref;
     private CheckBoxPreference mCompatibilityMode;
 
@@ -120,11 +120,11 @@ public class SpareParts extends PreferenceActivity
         mTransitionAnimationsPref = (ListPreference) prefSet.findPreference(TRANSITION_ANIMATIONS_PREF);
         mTransitionAnimationsPref.setOnPreferenceChangeListener(this);
         mFancyImeAnimationsPref = (CheckBoxPreference) prefSet.findPreference(FANCY_IME_ANIMATIONS_PREF);
-        mHapticFeedbackPref = (CheckBoxPreference) prefSet.findPreference(HAPTIC_FEEDBACK_PREF);
+        //mHapticFeedbackPref = (CheckBoxPreference) prefSet.findPreference(HAPTIC_FEEDBACK_PREF);
         mFontSizePref = (ListPreference) prefSet.findPreference(FONT_SIZE_PREF);
         mFontSizePref.setOnPreferenceChangeListener(this);
-        mEndButtonPref = (ListPreference) prefSet.findPreference(END_BUTTON_PREF);
-        mEndButtonPref.setOnPreferenceChangeListener(this);
+        //mEndButtonPref = (ListPreference) prefSet.findPreference(END_BUTTON_PREF);
+        //mEndButtonPref.setOnPreferenceChangeListener(this);
         mShowMapsCompassPref = (CheckBoxPreference) prefSet.findPreference(MAPS_COMPASS_PREF);
         mCompatibilityMode = (CheckBoxPreference) findPreference(KEY_COMPATIBILITY_MODE);
         mCompatibilityMode.setPersistent(false);
@@ -149,9 +149,9 @@ public class SpareParts extends PreferenceActivity
             mFancyImeAnimationsPref.setChecked(Settings.System.getInt(
                     getContentResolver(), 
                     Settings.System.FANCY_IME_ANIMATIONS, 0) != 0);
-            mHapticFeedbackPref.setChecked(Settings.System.getInt(
-                    getContentResolver(), 
-                    Settings.System.HAPTIC_FEEDBACK_ENABLED, 0) != 0);
+            //mHapticFeedbackPref.setChecked(Settings.System.getInt(
+            //        getContentResolver(), 
+            //        Settings.System.HAPTIC_FEEDBACK_ENABLED, 0) != 0);
             Context c = createPackageContext("com.google.android.apps.maps", 0);
             mShowMapsCompassPref.setChecked(c.getSharedPreferences("extra-features", MODE_WORLD_READABLE)
                 .getBoolean("compass", false));
@@ -168,8 +168,8 @@ public class SpareParts extends PreferenceActivity
             writeAnimationPreference(1, objValue);
         } else if (preference == mFontSizePref) {
             writeFontSizePreference(objValue);
-        } else if (preference == mEndButtonPref) {
-            writeEndButtonPreference(objValue);
+        //} else if (preference == mEndButtonPref) {
+        //    writeEndButtonPreference(objValue);
         }
         // always let the preference setting proceed.
         return true;
@@ -257,10 +257,10 @@ public class SpareParts extends PreferenceActivity
             Settings.System.putInt(getContentResolver(),
                     Settings.System.FANCY_IME_ANIMATIONS,
                     mFancyImeAnimationsPref.isChecked() ? 1 : 0);
-        } else if (HAPTIC_FEEDBACK_PREF.equals(key)) {
-            Settings.System.putInt(getContentResolver(),
-                    Settings.System.HAPTIC_FEEDBACK_ENABLED,
-                    mHapticFeedbackPref.isChecked() ? 1 : 0);
+        //} else if (HAPTIC_FEEDBACK_PREF.equals(key)) {
+        //    Settings.System.putInt(getContentResolver(),
+        //            Settings.System.HAPTIC_FEEDBACK_ENABLED,
+        //            mHapticFeedbackPref.isChecked() ? 1 : 0);
         } else if (MAPS_COMPASS_PREF.equals(key)) {
             try {
                 Context c = createPackageContext("com.google.android.apps.maps", 0);
@@ -281,7 +281,7 @@ public class SpareParts extends PreferenceActivity
         readAnimationPreference(0, mWindowAnimationsPref);
         readAnimationPreference(1, mTransitionAnimationsPref);
         readFontSizePreference(mFontSizePref);
-        readEndButtonPreference(mEndButtonPref);
+        //readEndButtonPreference(mEndButtonPref);
         updateToggles();
     }
 }

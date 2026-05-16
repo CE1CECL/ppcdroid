@@ -72829,6 +72829,17 @@
  deprecated="not deprecated"
  visibility="public"
 >
+<method name="EthEnabled"
+ return="boolean"
+ abstract="false"
+ native="false"
+ synchronized="false"
+ static="false"
+ final="false"
+ deprecated="not deprecated"
+ visibility="public"
+>
+</method>
 <method name="getActiveNetworkInfo"
  return="android.net.NetworkInfo"
  abstract="false"

@@ -55,7 +55,7 @@ public class MediaPlayerDemo_Audio extends Activity {
                     /**
                      * TODO: Set the path variable to a local audio file path.
                      */
-                    path = "";
+                    path = "/sdcard/audio_sample.mp3";
                     if (path == "") {
                         // Tell the user to provide an audio file URL.
                         Toast

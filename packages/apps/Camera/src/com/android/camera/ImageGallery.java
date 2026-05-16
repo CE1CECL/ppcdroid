@@ -654,9 +654,17 @@ public class ImageGallery extends Activity implements
                 intent.putExtra(MediaStore.EXTRA_SCREEN_ORIENTATION,
                         ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
             } else {
-                intent = new Intent(this, ViewImage.class);
-                intent.putExtra(ViewImage.KEY_IMAGE_LIST, mAllImages);
-                intent.setData(image.fullSizeImageUri());
+                // FIXME - hacked so orientation is not forced to landscape
+                if (image instanceof VideoObject) {
+                    intent = new Intent(
+                            Intent.ACTION_VIEW, image.fullSizeImageUri());
+                    intent.putExtra(MediaStore.EXTRA_SCREEN_ORIENTATION,
+                            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                } else {
+                    intent = new Intent(this, ViewImage.class);
+                    intent.putExtra(ViewImage.KEY_IMAGE_LIST, mAllImages);
+                    intent.setData(image.fullSizeImageUri());
+                }
             }
             startActivity(intent);
         }

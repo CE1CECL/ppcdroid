@@ -110,7 +110,7 @@ def StartEmulator(exe_name='emulator', kernel=None,
   if image: args += ['-system', image]
   if userdata: args += ['-initdata', userdata, '-data', userdata]
   if system: args += ['-sysdir', system]
-  args += ['-partition-size', '128']
+  args += ['-partition-size', '330']
   args += ['-no-window', '-netfast', '-noaudio']
 
   _USE_PIPE = True
@@ -124,6 +124,9 @@ def StartEmulator(exe_name='emulator', kernel=None,
     args += ['-shell-serial', 'fdpair:%d:%d' % (em_stdin_r, em_stdout_w)]
   else:
     args += ['-shell']
+
+  if os.environ.get('TARGET_ARCH') == "ppc":
+    args += ['-qemu', '-L', 'prebuilt/android-ppc/kernel']
 
   # Ensure that this environment variable isn't set;
   # if it is, the emulator will print the log to stdout.

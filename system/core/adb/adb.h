@@ -222,6 +222,7 @@ void remove_socket(asocket *s);
 void close_all_sockets(atransport *t);
 
 #define  LOCAL_CLIENT_PREFIX  "emulator-"
+#define  REMOTE_CLIENT_PREFIX  "device-"
 
 asocket *create_local_socket(int fd);
 asocket *create_local_service_socket(const char *destination);
@@ -279,6 +280,7 @@ asocket *host_service_to_socket(const char*  name, const char *serial);
 
 #if !ADB_HOST
 int       init_jdwp(void);
+int       init_gdb(void);
 asocket*  create_jdwp_service_socket();
 asocket*  create_jdwp_tracker_service_socket();
 int       create_jdwp_connection_fd(int  jdwp_pid);

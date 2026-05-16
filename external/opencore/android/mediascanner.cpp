@@ -622,7 +622,10 @@ status_t MediaScanner::doProcessDirectory(char *path, int pathRemaining, const c
         }
 
         int type = entry->d_type;
+        int nameLength = strlen(name);
         if (type == DT_UNKNOWN) {
+            if (nameLength < pathRemaining )
+            	strcpy(fileSpot, name);
             // If the type is unknown, stat() the file instead.
             // This is sometimes necessary when accessing NFS mounted filesystems, but
             // could be needed in other cases well.
@@ -638,7 +641,6 @@ status_t MediaScanner::doProcessDirectory(char *path, int pathRemaining, const c
             }
         }
         if (type == DT_REG || type == DT_DIR) {
-            int nameLength = strlen(name);
             bool isDirectory = (type == DT_DIR);
 
             if (nameLength > pathRemaining || (isDirectory && nameLength + 1 > pathRemaining)) {
@@ -658,6 +660,7 @@ status_t MediaScanner::doProcessDirectory(char *path, int pathRemaining, const c
                     // pass exceptions up - ignore other errors
                     if (exceptionCheck && exceptionCheck(exceptionEnv)) goto failure;
                     LOGE("Error processing '%s' - skipping\n", path);
+                    if (exceptionCheck && exceptionCheck(exceptionEnv)) goto failure;
                     continue;
                 }
             } else if (fileMatchesExtension(path, extensions)) {

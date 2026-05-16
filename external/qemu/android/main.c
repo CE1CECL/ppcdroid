@@ -1740,7 +1740,15 @@ int main(int argc, char **argv)
     int    shell_serial = 0;
     int    dns_count = 0;
     unsigned  cachePartitionSize = 0;
+#if defined (TARGET_ARM)
     unsigned  defaultPartitionSize = 0x4200000;
+#elif defined (TARGET_MIPS)
+    unsigned  defaultPartitionSize = 0xc600000;
+#elif defined (TARGET_PPC)
+    unsigned  defaultPartitionSize = 0x8400000;
+#else
+#error Unknown architecture
+#endif
 
     AndroidHwConfig*  hw;
 
@@ -1954,6 +1962,7 @@ int main(int argc, char **argv)
             opts->kernel = _getSdkSystemImage(opts->sysdir, "-kernel", "kernel-qemu");
             D("autoconfig: -kernel %s", opts->kernel);
         }
+
 
         if (!opts->ramdisk) {
             opts->ramdisk = _getSdkSystemImage(opts->sysdir, "-ramdisk", "ramdisk.img");
@@ -2291,9 +2300,10 @@ int main(int argc, char **argv)
     {
         const char*  filetype = "file";
 
+/*
         if (avdInfo_isImageReadOnly(android_avdInfo, AVD_IMAGE_INITSYSTEM))
             filetype = "initfile";
-
+*/
         bufprint(tmp, tmpend,
              "system,size=0x%x,%s=%s", defaultPartitionSize, filetype,
              avdInfo_getImageFile(android_avdInfo, AVD_IMAGE_INITSYSTEM));
@@ -2456,6 +2466,16 @@ int main(int argc, char **argv)
         }
     }
 
+#ifdef TARGET_PPC
+    {
+        char *path = _getSdkImagePath("kernel-qemu");
+        if (path) {
+            args[n++] = "-L";
+            args[n++] = strdup(path);
+        }
+    }
+#endif
+
     if (opts->memory) {
         char*  end;
         long   ramSize = strtol(opts->memory, &end, 0);
@@ -2514,7 +2534,11 @@ int main(int argc, char **argv)
         static char  params[1024];
         char        *p = params, *end = p + sizeof(params);
 
+#ifndef TARGET_PPC
         p = bufprint(p, end, "qemu=1 console=ttyS0" );
+#else
+        p = bufprint(p, end, "qemu=1 console=ttyS1" );
+#endif
 
         if (opts->shell || opts->logcat) {
             p = bufprint(p, end, " androidboot.console=ttyS%d", shell_serial );
@@ -2880,6 +2904,8 @@ void  android_emulation_setup( void )
              * under VMWare.
              */
             BEGIN_NOSIGALRM
+/*NS: Disable google statistics gathering*/
+#if 0
                 pid = fork();
                 if (pid == 0) {
                     int  fd = open("/dev/null", O_WRONLY);
@@ -2887,6 +2913,7 @@ void  android_emulation_setup( void )
                     dup2(fd, 2);
                     execl( tmp, _ANDROID_PING_PROGRAM, "ping", "emulator", VERSION_STRING, NULL );
                 }
+#endif
             END_NOSIGALRM
 
             /* don't do anything in the parent or in case of error */

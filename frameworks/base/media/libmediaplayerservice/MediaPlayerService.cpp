@@ -49,6 +49,10 @@
 #include "VorbisPlayer.h"
 #include <media/PVPlayer.h>
 
+#ifdef BUILD_WITH_GST
+#include <GstPlayer.h>
+#endif
+
 /* desktop Linux needs a little help with gettid() */
 #if defined(HAVE_GETTID) && !defined(HAVE_ANDROID_OS)
 #define __KERNEL__
@@ -61,6 +65,7 @@ pid_t gettid() { return syscall(__NR_gettid);}
 #undef __KERNEL__
 #endif
 
+#define VORBIS_IDENT letoh32(0x5367674f)
 
 namespace android {
 
@@ -484,7 +489,7 @@ static player_type getPlayerType(int fd, int64_t offset, int64_t length)
     long ident = *((long*)buf);
 
     // Ogg vorbis?
-    if (ident == 0x5367674f) // 'OggS'
+    if (ident == VORBIS_IDENT) // 'OggS'
         return VORBIS_PLAYER;
 
     // Some kind of MIDI?
@@ -504,6 +509,12 @@ static player_type getPlayerType(int fd, int64_t offset, int64_t length)
         EAS_Shutdown(easdata);
     }
 
+#ifdef BUILD_WITH_GST
+    // if GST_CONFIG_FILE exists, replace pv player with gst player
+    if (access(GST_CONFIG_FILE, 0) == 0)
+        return GST_PLAYER;
+#endif
+
     // Fall through to PV
     return PV_PLAYER;
 }
@@ -522,6 +533,12 @@ static player_type getPlayerType(const char* url)
             }
         }
     }
+
+#ifdef BUILD_WITH_GST
+    // if GST_CONFIG_FILE exists, replace pv player with gst player
+    if (access(GST_CONFIG_FILE, 0) == 0)
+        return GST_PLAYER;
+#endif
 
     // Fall through to PV
     return PV_PLAYER;
@@ -544,6 +561,12 @@ static sp<MediaPlayerBase> createPlayer(player_type playerType, void* cookie,
             LOGV(" create VorbisPlayer");
             p = new VorbisPlayer();
             break;
+#ifdef BUILD_WITH_GST
+        case GST_PLAYER:
+            LOGV(" create GstPlayer");
+            p = new GstPlayer();
+            break;
+#endif
     }
     if (p != NULL) {
         if (p->initCheck() == NO_ERROR) {

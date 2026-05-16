@@ -213,6 +213,7 @@ int vm_running;
 static int rtc_utc = 1;
 static int rtc_date_offset = -1; /* -1 means no change */
 int cirrus_vga_enabled = 1;
+int std_vga_enabled = 0;
 int vmsvga_enabled = 0;
 #ifdef TARGET_SPARC
 int graphic_width = 1024;
@@ -258,7 +259,7 @@ int old_param = 0;
 #endif
 const char *qemu_name;
 int alt_grab = 0;
-#ifdef TARGET_SPARC
+#if defined (TARGET_SPARC) || defined (TARGET_PPC)
 unsigned int nb_prom_envs = 0;
 const char *prom_envs[MAX_PROM_ENVS];
 #endif
@@ -2238,7 +2239,7 @@ static int send_all(int fd, const uint8_t *buf, int len1)
     while (len > 0) {
         ret = socket_send(fd, buf, len);
         if (ret < 0) {
-            if (errno != EWOULDBLOCK) {
+            if (errno != EAGAIN && errno != EWOULDBLOCK) {
                 return -1;
             }
         } else if (ret == 0) {
@@ -2261,7 +2262,7 @@ static int unix_write(int fd, const uint8_t *buf, int len1)
     while (len > 0) {
         ret = write(fd, buf, len);
         if (ret < 0) {
-            if (errno != EINTR && errno != EAGAIN)
+            if (errno != EINTR && errno != EAGAIN && errno != EWOULDBLOCK)
                 return -1;
         } else if (ret == 0) {
             break;
@@ -3828,7 +3829,7 @@ static CharDriverState *qemu_chr_open_tcp(const char *host_str,
             ret = socket_connect(fd, &saddr);
             if (ret < 0) {
                 err = errno;
-                if (err == EINTR || err == EWOULDBLOCK) {
+                if (err == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) {
                 } else if (err == EINPROGRESS) {
                     break;
 #ifdef _WIN32
@@ -4566,7 +4567,8 @@ static void tap_receive(void *opaque, const uint8_t *buf, int size)
     int ret;
     for(;;) {
         ret = write(s->fd, buf, size);
-        if (ret < 0 && (errno == EINTR || errno == EAGAIN)) {
+        if (ret < 0 &&
+            (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)) {
         } else {
             break;
         }
@@ -4965,7 +4967,7 @@ static void net_socket_send(void *opaque)
     size = socket_recv(s->fd, buf1, sizeof(buf1));
     if (size < 0) {
         err = errno;
-        if (err != EWOULDBLOCK)
+        if (errno == EAGAIN || errno == EWOULDBLOCK)
             goto eoc;
     } else if (size == 0) {
         /* end of connection */
@@ -5271,7 +5273,7 @@ static int net_socket_connect_init(VLANState *vlan, const char *host_str)
         ret = socket_connect(fd, &saddr);
         if (ret < 0) {
             err = errno;
-            if (err == EINTR || err == EWOULDBLOCK) {
+            if (err == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) {
             } else if (err == EINPROGRESS) {
                 break;
 #ifdef _WIN32
@@ -5360,7 +5362,7 @@ static const char *get_opt_value(char *buf, int buf_size, const char *p)
     return p;
 }
 
-static int get_param_value(char *buf, int buf_size,
+int get_param_value(char *buf, int buf_size,
                            const char *tag, const char *str)
 {
     const char *p;
@@ -9275,7 +9277,7 @@ int main(int argc, char **argv)
             case QEMU_OPTION_name:
                 qemu_name = optarg;
                 break;
-#ifdef TARGET_SPARC
+#if defined(TARGET_SPARC) || defined(TARGET_PPC)
             case QEMU_OPTION_prom_env:
                 if (nb_prom_envs >= MAX_PROM_ENVS) {
                     fprintf(stderr, "Too many prom variables\n");

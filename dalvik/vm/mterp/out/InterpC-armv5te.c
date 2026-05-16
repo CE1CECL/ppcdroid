@@ -76,6 +76,10 @@
 //# define NO_UNALIGN_64__UNION
 # define NO_UNALIGN_64__MEMCPY
 #endif
+#if defined(__mips__) || defined(__powerpc__)
+# define NO_UNALIGN_64__UNION
+# define NO_UNALIGN_64__MEMCPY
+#endif
 
 //#define LOG_INSTR                   /* verbose debugging */
 /* set and adjust ANDROID_LOG_TAGS='*:i jdwp:i dalvikvm:i dalvikvmi:i' */
@@ -518,7 +522,7 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
             ADJUST_PC(_pcadj);                                              \
             glue->entryPoint = _entryPoint;                                 \
             LOGVV("threadid=%d: switch to STD ep=%d adj=%d\n",              \
-                glue->self->threadId, (_entryPoint), (_pcadj));             \
+                self->threadId, (_entryPoint), (_pcadj));             \
             GOTO_bail_switch();                                             \
         }                                                                   \
     }

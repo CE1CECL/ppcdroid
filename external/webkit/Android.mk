@@ -70,6 +70,14 @@ ifeq ($(TARGET_ARCH),arm)
 LOCAL_CFLAGS += -Darm -fvisibility=hidden
 endif
 
+ifeq ($(TARGET_ARCH),mips)
+LOCAL_CFLAGS += -fvisibility=hidden
+endif
+
+ifeq ($(TARGET_ARCH),ppc)
+LOCAL_CFLAGS += -fvisibility=hidden
+endif
+
 ifeq ($(WEBCORE_INSTRUMENTATION),true)
 LOCAL_CFLAGS += -DANDROID_INSTRUMENT
 endif

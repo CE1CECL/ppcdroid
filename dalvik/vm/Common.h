@@ -41,7 +41,10 @@
  * Define this above the #include "Dalvik.h" to enable for only a
  * single file.
  */
-/* #define VERY_VERBOSE_LOG */
+#ifdef __powerpc__
+#undef VERY_VERBOSE_LOG
+#endif
+
 #if defined(VERY_VERBOSE_LOG)
 # define LOGVV      LOGV
 # define IF_LOGVV() IF_LOGV()
@@ -75,6 +78,20 @@ typedef signed int          s4;
 typedef signed long long    s8;
 #endif
 
+#if defined(HAVE_ENDIAN_H)
+# include <endian.h>
+#else /*not HAVE_ENDIAN_H*/
+# define __BIG_ENDIAN 4321
+# define __LITTLE_ENDIAN 1234
+# if defined(HAVE_LITTLE_ENDIAN)
+#  define __BYTE_ORDER __LITTLE_ENDIAN
+# else
+#  define __BYTE_ORDER __BIG_ENDIAN
+# endif
+#endif /*not HAVE_ENDIAN_H*/
+
+
+
 /*
  * Storage for primitive types and object references.
  *
@@ -84,10 +101,17 @@ typedef signed long long    s8;
  * little-endian systems.
  */
 typedef union JValue {
+#if __BYTE_ORDER == __BIG_ENDIAN
+    u1      zz[4];
+    s1      bb[4];
+    u2      cc[2];
+    s2      ss[2];
+#else
     u1      z;
     s1      b;
     u2      c;
     s2      s;
+#endif
     s4      i;
     s8      j;
     float   f;
@@ -104,20 +128,6 @@ typedef enum { false=0, true=!false } bool;
 #endif
 
 #define NELEM(x) ((int) (sizeof(x) / sizeof((x)[0])))
-
-
-#if defined(HAVE_ENDIAN_H)
-# include <endian.h>
-#else /*not HAVE_ENDIAN_H*/
-# define __BIG_ENDIAN 4321
-# define __LITTLE_ENDIAN 1234
-# if defined(HAVE_LITTLE_ENDIAN)
-#  define __BYTE_ORDER __LITTLE_ENDIAN
-# else
-#  define __BYTE_ORDER __BIG_ENDIAN
-# endif
-#endif /*not HAVE_ENDIAN_H*/
-
 
 #if 0
 /*

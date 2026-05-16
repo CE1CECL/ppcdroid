@@ -169,8 +169,32 @@ else
 	i387/s_scalbnf.S
 
     libm_common_includes = $(LOCAL_PATH)/i386 $(LOCAL_PATH)/i387
+
   else
-    $(error "Unknown architecture")
+    ifeq ($(TARGET_ARCH),mips)
+      libm_common_src_files += \
+	  mips/fenv.c \
+	  src/e_ldexpf.c \
+	  src/s_scalbln.c \
+	  src/s_scalbn.c \
+	  src/s_scalbnf.c
+
+      libm_common_includes = $(LOCAL_PATH)/mips
+    else
+      ifeq ($(TARGET_ARCH),ppc)
+        libm_common_src_files += \
+              powerpc/fenv.c \
+              src/e_ldexpf.c \
+              src/s_scalbln.c \
+              src/s_scalbn.c \
+              src/s_scalbnf.c
+
+        libm_common_includes = $(LOCAL_PATH)/powerpc
+
+      else
+        $(error "Unknown architecture")
+      endif
+    endif
   endif
 endif
 

@@ -347,10 +347,17 @@ typedef union OMX_VERSIONTYPE
 {
     struct
     {
+#ifndef __powerpc__
         OMX_U8 nVersionMajor;   /**< Major version accessor element */
         OMX_U8 nVersionMinor;   /**< Minor version accessor element */
         OMX_U8 nRevision;       /**< Revision version accessor element */
         OMX_U8 nStep;           /**< Step version accessor element */
+#else
+        OMX_U8 nStep;           /**< Step version accessor element */
+        OMX_U8 nRevision;       /**< Revision version accessor element */
+        OMX_U8 nVersionMinor;   /**< Minor version accessor element */
+        OMX_U8 nVersionMajor;   /**< Major version accessor element */
+#endif
     } s;
     OMX_U32 nVersion;           /**< 32 bit value to make accessing the
                                     version easily done in a single word

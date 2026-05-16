@@ -69,6 +69,7 @@ typedef enum {
  	CPU_PPC64_PA6T, /**< ppc64 PA6T */
 	CPU_ARM_MPCORE, /**< ARM MPCore */
 	CPU_ARM_V6, /**< ARM V6 */
+	CPU_ARM_V7, /**< ARM V7 */
 	CPU_PPC64_POWER5pp,  /**< ppc64 Power5++ family */
 	CPU_PPC_E300, /**< e300 */
 	CPU_AVR32, /**< AVR32 */

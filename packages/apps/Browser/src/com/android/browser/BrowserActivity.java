@@ -2864,18 +2864,18 @@ public class BrowserActivity extends Activity
 
             mInLoad = true;
             updateInLoadMenuItems();
-            if (!mIsNetworkUp) {
-                if ( mAlertDialog == null) {
-                    mAlertDialog = new AlertDialog.Builder(BrowserActivity.this)
-                        .setTitle(R.string.loadSuspendedTitle)
-                        .setMessage(R.string.loadSuspended)
-                        .setPositiveButton(R.string.ok, null)
-                        .show();
-                }
-                if (view != null) {
-                    view.setNetworkAvailable(false);
-                }
-            }
+            //if (!mIsNetworkUp) {
+            //   if ( mAlertDialog == null) {
+            //        mAlertDialog = new AlertDialog.Builder(BrowserActivity.this)
+            //            .setTitle(R.string.loadSuspendedTitle)
+            //            .setMessage(R.string.loadSuspended)
+            //            .setPositiveButton(R.string.ok, null)
+            //            .show();
+            //    }
+            //    if (view != null) {
+            //        view.setNetworkAvailable(false);
+            //    }
+            //}
 
             // schedule to check memory condition
             mHandler.sendMessageDelayed(mHandler.obtainMessage(CHECK_MEMORY),

@@ -1,0 +1,61 @@
+#!/usr/bin/python -E
+
+import os
+import re
+import sys
+
+def PrintUsage():
+    print "Usage:" + sys.argv[0] + " src_dir" + " output"
+    print "    dir: directory on the host to store profile results"
+
+if (len(sys.argv) < 3):
+    PrintUsage()
+    sys.exit(1)
+
+try:
+    oprofile_event_dir = os.environ['OPROFILE_EVENTS_DIR']
+except:
+    print "OPROFILE_EVENTS_DIR not set. Run \". envsetup.sh\" first"
+    sys.exit(1)
+
+input_dir = sys.argv[1]
+output_dir = sys.argv[2]
+if (len(sys.argv) > 3):
+    extra_args = sys.argv[3]
+else:
+    extra_args = ""
+
+# enter the destination directory
+stream = os.popen("find " + input_dir + " -type f -name \*all")
+
+# now all the sample files are on the host, we need to invoke opimport one at a
+# time to convert the content from the ARM abi to x86 ABI
+
+# break the full filename into:
+# 1: leading dir: "raw_samples"
+# 2: intermediate dirs: "/blah/blah/blah"
+# 3: filename: e.g. "CPU_CYCLES.150000.0.all.all.all"
+regexp = "(^" + input_dir + ")(.*)/(.*)$"
+pattern = re.compile(regexp)
+for line in stream:
+    match = pattern.search(line)
+    leading_dir = match.group(1)
+    middle_part = match.group(2)
+    file_name = match.group(3)
+
+    dir = output_dir + "/samples" + middle_part
+    # print "DIR: " + dir
+
+    # if multiple events are collected the directory could have been setup
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+
+    cmd = oprofile_event_dir + "/bin/opimport -a " + oprofile_event_dir + \
+          "/abi/ppc_abi -o " + output_dir + "/samples" + middle_part + "/" + file_name + " " + line
+    # print "CMD: " + cmd
+    os.system(cmd)
+
+stream.close()
+
+# short summary of profiling results
+os.system(oprofile_event_dir + "/bin/opreport --session-dir=" + output_dir + " " + extra_args)

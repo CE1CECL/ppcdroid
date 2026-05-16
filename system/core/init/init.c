@@ -801,8 +801,12 @@ int main(int argc, char **argv)
 
     act.sa_handler = sigchld_handler;
     act.sa_flags = SA_NOCLDSTOP;
+#if defined(__mips__) || defined(__powerpc__)
+    sigemptyset(&act.sa_mask);
+#else
     act.sa_mask = 0;
     act.sa_restorer = NULL;
+#endif
     sigaction(SIGCHLD, &act, 0);
 
     /* clear the umask */
@@ -813,6 +817,9 @@ int main(int argc, char **argv)
          * let the rc file figure out the rest.
          */
     mkdir("/dev", 0755);
+#ifdef BOARD_USES_LIRC
+    mknod("/dev/lirc0", S_IFCHR | 0600, (0x61 << 8));
+#endif
     mkdir("/proc", 0755);
     mkdir("/sys", 0755);
 

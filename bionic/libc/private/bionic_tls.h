@@ -88,7 +88,19 @@ extern int __set_tls(void *ptr);
 
 /* get the TLS */
 #ifdef __arm__
+#ifdef USE_ARM_TLS_REG
+typedef void* (__get_tls_t)(void);
+static const __get_tls_t* __get_tls = (const __get_tls_t *)0xffff0fe0;
+#else
 #  define __get_tls() ( *((volatile void **) 0xffff0ff0) )
+#endif
+#elif defined(__powerpc__)
+# define __get_tls() \
+	({ \
+		unsigned int _res; \
+		asm volatile ("mr %0,2" : "=r"(_res)); \
+		(void *)_res; \
+	})
 #else
 extern void*  __get_tls( void );
 #endif

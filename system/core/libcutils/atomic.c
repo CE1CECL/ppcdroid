@@ -105,7 +105,7 @@ int64_t android_quasiatomic_read_64(volatile int64_t* addr) {
 
 
 /*****************************************************************************/
-#elif defined(__i386__) || defined(__x86_64__)
+#elif defined(__i386__) || defined(__x86_64__) || defined(__powerpc__)
 
 void android_atomic_write(int32_t value, volatile int32_t* addr) {
     int32_t oldValue;
@@ -162,6 +162,7 @@ int32_t android_atomic_swap(int32_t value, volatile int32_t* addr) {
     return oldValue;
 }
 
+#if defined(__i386__) || defined(__x86_64__)
 int android_atomic_cmpxchg(int32_t oldvalue, int32_t newvalue, volatile int32_t* addr) {
     int xchg;
     asm volatile
@@ -174,6 +175,33 @@ int android_atomic_cmpxchg(int32_t oldvalue, int32_t newvalue, volatile int32_t*
     );
     return xchg;
 }
+
+#elif defined(__powerpc__)
+
+int android_atomic_cmpxchg(int32_t oldvalue, int32_t newvalue, volatile int32_t* addr)
+{
+        int xchg;
+
+        asm volatile (
+"1:     lwarx   %0,0,%2\n"
+"       cmpw    0,%0,%3\n"
+"       bne-    2f\n"
+"       stwcx.  %4,0,%2\n"
+"       bne-    1b\n"
+"2:"
+	: "=&r" (xchg), "+m" (*addr)
+        : "r" (addr), "r" (oldvalue), "r" (newvalue)
+        : "cc", "memory");
+
+        return xchg != oldvalue;
+}
+
+#else
+#error Missing android_atomic_cmpxchg
+int android_atomic_cmpxchg(int32_t oldvalue, int32_t newvalue, volatile int32_t* addr) {
+    return 0;
+}
+#endif
 
 #define NEED_QUASIATOMICS 1
 
@@ -245,6 +273,69 @@ int64_t android_quasiatomic_read_64(volatile int64_t* addr) {
     return result;
 }    
 
+/*****************************************************************************/
+#elif defined(__mips__)
+extern int android_atomic_cmpxchg(int32_t oldvalue,
+				int32_t newvalue, volatile int32_t* addr);
+
+void android_atomic_write(int32_t value, volatile int32_t* addr) {
+    int32_t oldValue;
+    do {
+        oldValue = *addr;
+    } while (android_atomic_cmpxchg(oldValue, value, addr));
+}
+
+int32_t android_atomic_inc(volatile int32_t* addr) {
+    int32_t oldValue;
+    do {
+        oldValue = *addr;
+    } while (android_atomic_cmpxchg(oldValue, oldValue+1, addr));
+    return oldValue;
+}
+
+int32_t android_atomic_dec(volatile int32_t* addr) {
+    int32_t oldValue;
+    do {
+        oldValue = *addr;
+    } while (android_atomic_cmpxchg(oldValue, oldValue-1, addr));
+    return oldValue;
+}
+
+int32_t android_atomic_add(int32_t value, volatile int32_t* addr) {
+    int32_t oldValue;
+    do {
+        oldValue = *addr;
+    } while (android_atomic_cmpxchg(oldValue, oldValue+value, addr));
+    return oldValue;
+}
+
+int32_t android_atomic_and(int32_t value, volatile int32_t* addr) {
+    int32_t oldValue;
+    do {
+        oldValue = *addr;
+    } while (android_atomic_cmpxchg(oldValue, oldValue&value, addr));
+    return oldValue;
+}
+
+int32_t android_atomic_or(int32_t value, volatile int32_t* addr) {
+    int32_t oldValue;
+    do {
+        oldValue = *addr;
+    } while (android_atomic_cmpxchg(oldValue, oldValue|value, addr));
+    return oldValue;
+}
+
+int32_t android_atomic_swap(int32_t value, volatile int32_t* addr) {
+    int32_t oldValue;
+    do {
+        oldValue = *addr;
+    } while (android_atomic_cmpxchg(oldValue, value, addr));
+    return oldValue;
+}
+
+#define NEED_QUASIATOMICS 1
+
+/*****************************************************************************/
 #else
 
 #error "Unsupported atomic operations for this platform"

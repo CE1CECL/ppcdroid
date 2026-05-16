@@ -48,7 +48,7 @@ public class SetAlarm extends PreferenceActivity
     private CheckBoxPreference mAlarmOnPref;
     private Preference mTimePref;
     private AlarmPreference mAlarmPref;
-    private CheckBoxPreference mVibratePref;
+    //private CheckBoxPreference mVibratePref;
     private RepeatPreference mRepeatPref;
     private ContentObserver mAlarmsChangeObserver;
     private MenuItem mDeleteAlarmItem;
@@ -113,7 +113,7 @@ public class SetAlarm extends PreferenceActivity
         mAlarmOnPref = (CheckBoxPreference)findPreference("on");
         mTimePref = findPreference("time");
         mAlarmPref = (AlarmPreference) findPreference("alarm");
-        mVibratePref = (CheckBoxPreference) findPreference("vibrate");
+        //mVibratePref = (CheckBoxPreference) findPreference("vibrate");
         mRepeatPref = (RepeatPreference) findPreference("setRepeat");
 
         Intent i = getIntent();
@@ -185,8 +185,8 @@ public class SetAlarm extends PreferenceActivity
             showDialog(DIALOG_TIMEPICKER);
         } else if (preference == mAlarmOnPref) {
             saveAlarm(true);
-        } else if (preference == mVibratePref) {
-            saveAlarm(false);
+        //} else if (preference == mVibratePref) {
+        //    saveAlarm(false);
         }
 
         return super.onPreferenceTreeClick(preferenceScreen, preference);
@@ -217,7 +217,7 @@ public class SetAlarm extends PreferenceActivity
         mMinutes = minutes;
         mAlarmOnPref.setChecked(enabled);
         mDaysOfWeek.set(daysOfWeek);
-        mVibratePref.setChecked(vibrate);
+        //mVibratePref.setChecked(vibrate);
 
         if (alert == null || alert.length() == 0) {
             if (Log.LOGV) Log.v("****** reportAlarm null or 0-length alert");
@@ -279,7 +279,7 @@ public class SetAlarm extends PreferenceActivity
         if (mReportAlarmCalled && mAlarmPref.mAlert != null) {
             String alertString = mAlarmPref.mAlert.toString();
             saveAlarm(this, mId, mAlarmOnPref.isChecked(), mHour, mMinutes,
-                      mDaysOfWeek, mVibratePref.isChecked(), label, alertString,
+                      mDaysOfWeek, false, label, alertString,
                       popToast);
         }
     }

@@ -33,7 +33,7 @@
 #include "blkdev.h"
 #include "diskmbr.h"
 
-#define DEBUG_BLKDEV 0
+#define DEBUG_BLKDEV 1
 
 static blkdev_list_t *list_root = NULL;
 
@@ -83,6 +83,7 @@ int blkdev_refresh(blkdev_t *blk)
      * Open the disk partition table
      */
     devpath = blkdev_get_devpath(blk->disk);
+    LOGI("blkdev_refresh: devpath %s\n", devpath);
     if ((fd = open(devpath, O_RDONLY)) < 0) {
         LOGE("Unable to open device '%s' (%s)", devpath,
              strerror(errno));
@@ -103,6 +104,7 @@ int blkdev_refresh(blkdev_t *blk)
      * a partition so get the partition type
      */
 
+    LOGI("blkdev_refresh: blk type %d\n", blk->type);
     if (blk->type == blkdev_disk) {
         blk->nr_parts = 0;
 
@@ -115,24 +117,34 @@ int blkdev_refresh(blkdev_t *blk)
         for (i = 0; i < 4; i++) {
             struct dos_partition part;
 
-            dos_partition_dec(block + DOSPARTOFF + i * sizeof(struct dos_partition), &part);
+            dos_partition_dec(block + DOSPARTOFF +
+                              i * sizeof(struct dos_partition), &part);
             if (part.dp_flag != 0 && part.dp_flag != 0x80) {
-                struct fat_boot_sector *fb = (struct fat_boot_sector *) &block[0];
+                struct fat_boot_sector *fb =
+                    (struct fat_boot_sector *) &block[0];
              
-                if (!i && fb->reserved && fb->fats && fat_valid_media(fb->media)) {
+                if (!i && fb->reserved && fb->fats &&
+                    fat_valid_media(fb->media)) {
                     LOGI("Detected FAT filesystem in partition table");
                     break;
                 } else {
                     LOGI("Partition table looks corrupt");
                     break;
                 }
+            } else {
+                LOGI(" The dp_flag does not match expect value:%d",
+                     part.dp_flag);
             }
             if (part.dp_size != 0 && part.dp_typ != 0)
                 blk->nr_parts++;
         }
     } else if (blk->type == blkdev_partition) {
         struct dos_partition part;
+#ifndef BOARD_USES_HMP_VOLD_HACK
         int part_no = blk->minor -1;
+#else
+        int part_no = (blk->minor & 0x0f) -1;
+#endif
 
         if (part_no < 4) {
             dos_partition_dec(block + DOSPARTOFF + part_no * sizeof(struct dos_partition), &part);
@@ -285,7 +297,11 @@ blkdev_t *blkdev_lookup_by_devno(int maj, int min)
 
     while (list_scan) {
         if ((list_scan->dev->major == maj) &&
+#ifndef BOARD_USES_HMP_VOLD_HACK
             (list_scan->dev->minor == min))
+#else
+            ((list_scan->dev->minor & 0x0f) == (min & 0x0f)))
+#endif
             return list_scan->dev;
         list_scan = list_scan->next;
     }
@@ -301,14 +317,34 @@ int blkdev_get_num_pending_partitions(blkdev_t *blk)
     struct blkdev_list *list_scan = list_root;
     int num = blk->nr_parts;
 
-    if (blk->type != blkdev_disk)
+    if (blk->type != blkdev_disk ) {
+        LOGI("wrong blk->type want:%d, has:%d",blkdev_disk,blk->type);
         return -EINVAL;
+    }
 
     while (list_scan) {
+        char *devname;
+        int max_partition_number = SCSI_MAX_PARTITION_NUMBER;
+
         if (list_scan->dev->type != blkdev_partition)
             goto next;
 
         if (list_scan->dev->major != blk->major)
+            goto next;
+
+	/*
+	 * Make sure these partitions are in the same drive.
+	 * SD 0,16,32,...
+	 * MMC 0,8,16,...
+	 */
+	if ((devname = strrchr(blk->devpath, '/'))) {
+            devname++;
+            if (!strncmp(devname, "mmcblk", 6))
+                max_partition_number = MMC_MAX_PARTITION_NUMBER;
+            else if (!strncmp(devname, "sd", 2))
+                max_partition_number = SCSI_MAX_PARTITION_NUMBER;
+        }
+        if (list_scan->dev->minor/max_partition_number != blk->minor/max_partition_number)
             goto next;
 
         if (list_scan->dev->nr_sec != 0xffffffff &&

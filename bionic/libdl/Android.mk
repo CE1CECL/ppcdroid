@@ -22,6 +22,9 @@ ifneq ($(TARGET_SIMULATOR),true)
 ifeq ($(TARGET_ARCH),x86)
 LOCAL_LDFLAGS += -Wl,--exclude-libs=libgcc_eh.a
 endif
+ifeq ($(TARGET_ARCH),mips)
+LOCAL_LDFLAGS += -Wl,--exclude-libs=libgcc_eh.a
+endif
 endif
 
 LOCAL_SRC_FILES:= libdl.c
@@ -38,7 +41,7 @@ LOCAL_SYSTEM_SHARED_LIBRARIES :=
 
 include $(BUILD_SHARED_LIBRARY)
 
-BUILD_DLTEST:=0
+BUILD_DLTEST:=1
 ifeq ($(BUILD_DLTEST),1)
 
 #
