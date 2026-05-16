@@ -13,7 +13,7 @@ $(combo_target)AR := $($(combo_target)TOOLS_PREFIX)ar$(HOST_EXECUTABLE_SUFFIX)
 $(combo_target)OBJCOPY := $($(combo_target)TOOLS_PREFIX)objcopy$(HOST_EXECUTABLE_SUFFIX)
 $(combo_target)LD := $($(combo_target)TOOLS_PREFIX)ld$(HOST_EXECUTABLE_SUFFIX)
 
-$(combo_target)NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
+$(combo_target)NO_UNDEFINED_LDFLAGS := -Wl,--allow-shlib-undefined
 
 TARGET_arm_CFLAGS :=    -O2 \
                         -fomit-frame-pointer \

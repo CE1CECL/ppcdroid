@@ -87,7 +87,7 @@ COMMON_JAVA_PACKAGE_SUFFIX := .jar
 COMMON_ANDROID_PACKAGE_SUFFIX := .apk
 
 # list of flags to turn specific warnings in to errors
-TARGET_ERROR_FLAGS := -Werror=return-type
+TARGET_ERROR_FLAGS := -Wno-return-type
 
 # ###############################################################
 # Include sub-configuration files

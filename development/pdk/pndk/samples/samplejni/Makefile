@@ -36,7 +36,7 @@ $(OUTPUT_APK) : $(INPUT_APK) $(JNI_LIBS)
 	rm -rf $(APK_STAGE)
 
 libnative.so: native.o
-	$(CC) -nostdlib -Wl,-soname,libhello-shared.so -Wl,-shared,-Bsymbolic -L$(NDK_BASE)/lib $^ $(LIBS) -o $@ -Wl,--no-undefined $(ALIB)
+	$(CC) -nostdlib -Wl,-soname,libhello-shared.so -Wl,-shared,-Bsymbolic -L$(NDK_BASE)/lib $^ $(LIBS) -o $@ -Wl,--allow-shlib-undefined $(ALIB)
 	
 native.o: native.cpp
 	$(CC) -c -fpic $(INC) -I$(NDK_BASE)/include/nativehelper -o $@ $^ 

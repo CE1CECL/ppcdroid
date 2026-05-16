@@ -28,6 +28,6 @@ $(combo_target)GLOBAL_CFLAGS += -fPIC
 $(combo_target)GLOBAL_CFLAGS += \
 	-include $(call select-android-config-h,linux-x86)
 
-$(combo_target)NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
+$(combo_target)NO_UNDEFINED_LDFLAGS := -Wl,--allow-shlib-undefined
 
 

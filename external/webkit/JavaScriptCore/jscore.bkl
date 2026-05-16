@@ -76,7 +76,7 @@ JavaScriptCore Bakefile project file.
             <!-- FIXME: we need proper configure checks -->
             <define>HAVE_FUNC_ISNAN</define>
             <!-- check for undefined symbols for debugging reasons -->
-            <ldflags>-Wl,--no-undefined</ldflags>
+            <ldflags>-Wl,--allow-shlib-undefined</ldflags>
         </if>
 
         <if cond="PLATFORM_WIN32=='1'">

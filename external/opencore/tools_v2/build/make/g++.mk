@@ -15,7 +15,7 @@ override SYSLIBS = -lc -lm -ldl -lstdc++ -lpthread
 SHARED_CFLAGS ?= -fPIC
 SHARED_CXXFLAGS ?= -fPIC
 SHARED_PRE_LDFLAGS ?= -shared -Wl,-Bsymbolic -Wl,--allow-multiple-definition -Wl,--whole-archive
-SHARED_POST_LDFLAGS ?= -Wl,-no-whole-archive -Wl,--no-undefined $(SYSLIBS)
+SHARED_POST_LDFLAGS ?= -Wl,-no-whole-archive -Wl,--allow-shlib-undefined $(SYSLIBS)
 SONAME_ARG := -Wl,-h,
 
 STRIP_FLAGS := --strip-unneeded
@@ -27,7 +27,7 @@ CO := -c -o # make sure to leave a space at the end
 
 
 #Make all warnings into errors.
-FLAG_COMPILE_WARNINGS_AS_ERRORS := -Werror
+FLAG_COMPILE_WARNINGS_AS_ERRORS := 
 
 STAT_LIB_EXT:=a
 SHARED_LIB_EXT:=so

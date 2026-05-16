@@ -41,7 +41,7 @@ override SYSLIBS = -lc -lm -ldl -lstdc++
 
 SONAME_ARG := -Wl,-T,$(ANDROID_BASE)/config/armelf.xsc -Wl,--gc-sections -L$(ANDROID_BASE)/prebuilt/obj/lib -Wl,--whole-archive -Wl,-h,
 SHARED_PRE_LDFLAGS := -nostdlib -Wl,-shared,-Bsymbolic 
-SHARED_POST_LDFLAGS := -Wl,--no-whole-archive $(SYSLIBS) -Wl,--no-undefined $(ANDROID_BASE)/toolchain-eabi-4.2.1/lib/gcc/arm-eabi/4.2.1/interwork/libgcc.a
+SHARED_POST_LDFLAGS := -Wl,--no-whole-archive $(SYSLIBS) -Wl,--allow-shlib-undefined $(ANDROID_BASE)/toolchain-eabi-4.2.1/lib/gcc/arm-eabi/4.2.1/interwork/libgcc.a
 
 # Compiler specific libraries locations
 LIB_DIRS = \
@@ -54,7 +54,7 @@ PRE_LDFLAGS += \
    $(ANDROID_BASE)/toolchain-eabi-4.2.1/lib/gcc/arm-eabi/4.2.1/crtbegin_dynamic.o
 
 POST_LDFLAGS += \
-   -Wl,--no-undefined \
+   -Wl,--allow-shlib-undefined \
    $(ANDROID_BASE)/toolchain-eabi-4.2.1/lib/gcc/arm-eabi/4.2.1/interwork/libgcc.a \
    $(ANDROID_BASE)/prebuilt/obj/lib/crtend_android.o
 

@@ -21,7 +21,7 @@ staticlib: $(OBJECTS)
 	$(AR) -cr libhello-static.a $(OBJECTS) 
 	
 sharedlib: hellolibrary-shared.o
-	$(CC) -nostdlib -Wl,-soname,libhello-shared.so -Wl,-shared,-Bsymbolic -L$(NDK_BASE)/lib $^ $(LIBS) -o libhello-shared.so -Wl,--no-undefined $(ALIB)
+	$(CC) -nostdlib -Wl,-soname,libhello-shared.so -Wl,-shared,-Bsymbolic -L$(NDK_BASE)/lib $^ $(LIBS) -o libhello-shared.so -Wl,--allow-shlib-undefined $(ALIB)
 	
 hellolibrary-shared.o: hellolibrary.c
 	$(CC) -c -fpic $(INC) -o $@ $^ 

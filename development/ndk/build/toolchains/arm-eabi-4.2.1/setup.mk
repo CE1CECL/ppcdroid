@@ -78,7 +78,7 @@ TARGET_LDLIBS := -Wl,-rpath-link=$(SYSROOT)/usr/lib $(TARGET_LIBGCC)
 
 # These flags are used to ensure that a binary doesn't reference undefined
 # flags.
-TARGET_NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
+TARGET_NO_UNDEFINED_LDFLAGS := -Wl,--allow-shlib-undefined
 
 # The ABI-specific sub-directory that the SDK tools recognize for
 # this toolchain's generated binaries

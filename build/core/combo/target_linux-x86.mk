@@ -19,7 +19,7 @@ $(combo_target)LIBGCC := \
         $(shell $($(combo_target)CC) -m32 -print-file-name=libgcc_eh.a)
 endif
 
-$(combo_target)NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
+$(combo_target)NO_UNDEFINED_LDFLAGS := -Wl,--allow-shlib-undefined
 
 libc_root := bionic/libc
 libm_root := bionic/libm

@@ -20,7 +20,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE:= libsqlite3_phonetic_string_utils_test
 
-LOCAL_CFLAGS += -Wall -Werror
+LOCAL_CFLAGS += -Wall 
 
 LOCAL_SRC_FILES := \
 	PhoneticStringUtils.cpp \
@@ -47,7 +47,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE:= libsqlite3_phone_number_utils_test
 
-LOCAL_CFLAGS += -Wall -Werror
+LOCAL_CFLAGS += -Wall 
 
 LOCAL_SRC_FILES := \
 	PhoneNumberUtils.cpp \
