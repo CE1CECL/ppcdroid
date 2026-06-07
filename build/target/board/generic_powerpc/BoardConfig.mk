@@ -6,9 +6,9 @@
 # The generic product target doesn't have any hardware-specific pieces.
 TARGET_NO_BOOTLOADER := true
 TARGET_NO_KERNEL := true
-TARGET_CPU_ABI := ppc750
+TARGET_CPU_ABI := powerpc
 TARGET_ARCH := powerpc
-TARGET_ARCH_VARIANT := ppc750
+TARGET_ARCH_VARIANT := powerpc
 TARGET_PRELINK_MODULE := false
 
 BOARD_USES_GENERIC_AUDIO := false

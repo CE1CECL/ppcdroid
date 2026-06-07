@@ -1,2 +1,1 @@
-arch_variant_cflags := \
-	-mcpu=440fp
+arch_variant_cflags := -mcpu=440fp
