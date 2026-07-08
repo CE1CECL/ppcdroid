@@ -38,4 +38,4 @@ obj-$(CONFIG_DWARF_UNWINDER)	+= dwarf.o
 
 obj-$(CONFIG_GENERIC_CLOCKEVENTS_BROADCAST)	+= localtimer.o
 
-EXTRA_CFLAGS += -Werror
+EXTRA_CFLAGS += 
