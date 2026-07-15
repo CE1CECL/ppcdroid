@@ -26,4 +26,4 @@ $(call inherit-product, $(SRC_TARGET_DIR)/board/generic_powerpc/device.mk)
 PRODUCT_NAME := full_powerpc
 PRODUCT_DEVICE := generic_powerpc
 PRODUCT_BRAND := Android
-PRODUCT_MODEL := Full Android on PowerPC Emulator
+PRODUCT_MODEL := Full Android on PowerPC
