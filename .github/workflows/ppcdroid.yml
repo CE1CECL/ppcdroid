@@ -52,7 +52,7 @@ jobs:
           sudo chroot .. ../build-ppcdroid.sh $(basename $(pwd)) full_powerpc-userdebug
           sudo cp -rfna out/target/product/generic_powerpc/root out/target/product/generic_powerpc/toor
           sudo cp -rfna out/target/product/generic_powerpc/system out/target/product/generic_powerpc/toor/
-          tar -zcvf ../../ppcdroid-gingerbread-ppc-full_powerpc-userdebug-rootfs.tar.gz -C out/target/product/generic_powerpc/toor/ ./
+          sudo tar -zcvf /ppcdroid-gingerbread-ppc-full_powerpc-userdebug-rootfs.tar.gz -C out/target/product/generic_powerpc/toor/ ./
           sudo rm -rf out
           cd ..
           sudo rm -rf ppcdroid-gingerbread-ppc
@@ -65,4 +65,4 @@ jobs:
         uses: actions/upload-artifact@main
         with:
           name: ppcdroid-gingerbread-ppc-full_powerpc-userdebug-rootfs
-          path: ppcdroid-gingerbread-ppc-full_powerpc-userdebug-rootfs.tar.gz
+          path: /ppcdroid-gingerbread-ppc-full_powerpc-userdebug-rootfs.tar.gz
