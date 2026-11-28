@@ -63,7 +63,7 @@ jobs:
           sudo rm -rf ubuntu-lucid
           mkdir -p /home/runner/work/ppcdroid/ppcdroid
       - name: upload
-        uses: actions/upload-artifact@main
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: ppcdroid-gingerbread-ppc-full_powerpc-userdebug-rootfs
           path: /ppcdroid-gingerbread-ppc-full_powerpc-userdebug-rootfs.tar.gz
