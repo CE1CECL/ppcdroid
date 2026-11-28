@@ -38,7 +38,8 @@ jobs:
           sudo chroot . apt-get --yes --force-yes clean
           sudo chroot . apt-get --yes --force-yes autoclean
           sudo chroot . apt-get --yes --force-yes autoremove
-          echo "cd \$1" | sudo tee build-ppcdroid.sh
+          echo "#!/bin/bash" | sudo tee build-ppcdroid.sh
+          echo "cd \$1" | sudo tee -a build-ppcdroid.sh
           echo "export PATH=/ppcdroid-javadk/64/jdk1.6.0_45/bin:\$PATH" | sudo tee -a build-ppcdroid.sh
           echo "source build/envsetup.sh" | sudo tee -a build-ppcdroid.sh
           echo "lunch \$2" | sudo tee -a build-ppcdroid.sh
