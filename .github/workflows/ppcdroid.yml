@@ -61,7 +61,6 @@ jobs:
           sudo umount proc
           cd ..
           sudo rm -rf ubuntu-lucid
-          mkdir -p /home/runner/work/ppcdroid/ppcdroid
       - name: upload
         uses: actions/upload-artifact@v7.0.2
         with:
