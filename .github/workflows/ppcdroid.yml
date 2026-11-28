@@ -42,7 +42,7 @@ jobs:
           echo "export PATH=/ppcdroid-javadk/64/jdk1.6.0_45/bin:\$PATH" | sudo tee -a build-ppcdroid.sh
           echo "source build/envsetup.sh" | sudo tee -a build-ppcdroid.sh
           echo "lunch \$2" | sudo tee -a build-ppcdroid.sh
-          echo "make -j droid" | sudo tee -a build-ppcdroid.sh
+          echo "make -j4 droid" | sudo tee -a build-ppcdroid.sh
           sudo chmod 0777 build-ppcdroid.sh
           sudo git clone --depth=1 --single-branch http://github.com/CE1CECL/JDK ppcdroid-javadk
           sudo git clone --depth=1 --single-branch --branch=gingerbread-ppc http://github.com/CE1CECL/ppcdroid ppcdroid-gingerbread-ppc
@@ -60,6 +60,7 @@ jobs:
           sudo umount proc
           cd ..
           sudo rm -rf ubuntu-lucid
+          mkdir -p /home/runner/work/ppcdroid/ppcdroid
       - name: upload
         uses: actions/upload-artifact@main
         with:
